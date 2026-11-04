@@ -199,7 +199,7 @@ class _AuthScreenState extends State<AuthScreen> {
             'Browse homes across Pakistan without an account. Sign in only when you want to save a listing, contact an owner, or post your own property.',
             style: TextStyle(
               fontSize: 13,
-              color: Color(0xFFCFE3DA),
+              color: AppColors.onGreenBody,
               height: 1.45,
             ),
           ),
@@ -230,7 +230,7 @@ class _AuthScreenState extends State<AuthScreen> {
             style: TextStyle(
               fontSize: 11.5,
               fontStyle: FontStyle.italic,
-              color: Color(0xFFB9D2C7),
+              color: AppColors.onGreenMuted,
             ),
           ),
         ],
