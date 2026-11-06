@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../services/auth_service.dart';
+import '../../services/session_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_top_bar.dart';
 import '../home/home_screen.dart';
+import 'otp_screen.dart';
 
-/// Login / Sign Up screen — design-only replica of the website's
-/// /auth page (yubko.com), reached from the dashboard's Next button.
-/// "Continue as guest" is kept on this screen too (top bar).
-/// No API calls yet: buttons show a "design only" message until
-/// the web developer provides the APIs.
+/// Login / Sign Up screen — the website's /auth page (yubko.com),
+/// reached from the dashboard's Next button. Integrated with the
+/// developer's Authentication API (2026-11-06): login, register +
+/// email OTP, forgot-password OTP reset, and Google sign-in are
+/// real calls. "Continue as guest" stays in the top bar.
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -28,6 +32,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   bool _obscurePassword = true;
   bool _keepSignedIn = true;
+  bool _busy = false;
   String? _signupCity;
 
   // The sign-up City dropdown on the website has only these cities.
@@ -55,15 +60,6 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void _showDesignOnly(String action) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.primary,
-        content: Text('$action — design only. API integration coming soon.'),
-      ),
-    );
-  }
-
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(backgroundColor: AppColors.error, content: Text(message)),
@@ -86,12 +82,11 @@ class _AuthScreenState extends State<AuthScreen> {
         _showError('Please enter your full name.');
         return;
       }
-      final phoneDigits = _phoneController.text.replaceAll(
-        RegExp(r'[^0-9]'),
-        '',
-      );
-      if (phoneDigits.length < 10) {
-        _showError('Please enter a valid phone number.');
+      final phone = _normalizePhone(_phoneController.text);
+      if (!RegExp(r'^03\d{9}$').hasMatch(phone)) {
+        _showError(
+          'Please enter a valid mobile number (03XXXXXXXXX, 11 digits).',
+        );
         return;
       }
       if (password.length < 8) {
@@ -103,21 +98,176 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
     }
-    _enterApp(_isLogin ? 'Log in' : 'Create account');
+    if (_busy) return;
+    if (_isLogin) {
+      _doLogin(email, password);
+    } else {
+      _doRegister(email, password);
+    }
   }
 
-  /// Design phase only: entering the app shows the design preview.
-  /// In Phase 2 this is replaced by the real API login / sign up.
-  void _enterApp(String action) {
+  /// Continue as guest: enters the app with no account/session.
+  void _enterAsGuest() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      (route) => false,
+    );
+  }
+
+  void _goHome(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.primary,
-        content: Text('$action — design preview (no API yet).'),
-      ),
+      SnackBar(backgroundColor: AppColors.primary, content: Text(message)),
     );
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const MainShell()),
       (route) => false,
+    );
+  }
+
+  /// Normalizes a Pakistani number to the API's 03XXXXXXXXX format.
+  String _normalizePhone(String raw) {
+    var digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.startsWith('92') && digits.length == 12) {
+      digits = '0${digits.substring(2)}';
+    }
+    return digits;
+  }
+
+  Future<void> _doLogin(String email, String password) async {
+    setState(() => _busy = true);
+    try {
+      final session = await AuthService.login(email: email, password: password);
+      await SessionStore.save(token: session.token, user: session.user);
+      if (!mounted) return;
+      _goHome(session.message ?? 'Logged in successfully.');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      if (e.requiresOtp) {
+        // Unverified email: the API already sent a fresh OTP.
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => OtpScreen(
+              email: e.data?['email']?.toString() ?? email,
+              purpose: OtpPurpose.register,
+            ),
+          ),
+        );
+      } else if (e.isSuspended) {
+        _showSuspended(e.message);
+      } else {
+        _showError(e.message);
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _doRegister(String email, String password) async {
+    setState(() => _busy = true);
+    try {
+      final whatsapp = _whatsappController.text.trim();
+      final registeredEmail = await AuthService.register(
+        fullName: _nameController.text.trim(),
+        email: email,
+        password: password,
+        phone: _normalizePhone(_phoneController.text),
+        whatsapp: whatsapp.isEmpty ? null : _normalizePhone(whatsapp),
+        city: _signupCity,
+        bio: _bioController.text.trim().isEmpty
+            ? null
+            : _bioController.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.primary,
+          content: Text(
+            'Registration successful! An OTP verification code has been sent to your email.',
+          ),
+        ),
+      );
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              OtpScreen(email: registeredEmail, purpose: OtpPurpose.register),
+        ),
+      );
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _onGooglePressed() async {
+    setState(() => _busy = true);
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return; // user cancelled
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        _showError('Google sign-in failed: no ID token was returned.');
+        return;
+      }
+      final session = await AuthService.loginWithGoogle(idToken);
+      await SessionStore.save(token: session.token, user: session.user);
+      if (!mounted) return;
+      _goHome(session.message ?? 'Google authentication successful.');
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError(
+        'Google sign-in is not configured for this app yet. The developer needs to add the Google client configuration (client IDs).',
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _onFacebookPressed() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Facebook sign-in',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        content: const Text(
+          'Facebook login needs the Facebook App ID and native setup from the developer before it can return an access token. The app\'s backend call (POST /facebook) is ready — this button will work as soon as that configuration is added.',
+          style: TextStyle(fontSize: 13, height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuspended(String message) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Account Suspended',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 13, height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -141,10 +291,7 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppTopBar(
-                showBack: true,
-                onGuestTap: () => _enterApp('Continue as guest'),
-              ),
+              AppTopBar(showBack: true, onGuestTap: _enterAsGuest),
               const SizedBox(height: 18),
               _buildFormCard(),
               const SizedBox(height: 20),
@@ -202,14 +349,14 @@ class _AuthScreenState extends State<AuthScreen> {
             letter: 'G',
             letterColor: const Color(0xFFEA4335),
             label: 'Continue with Google',
-            onTap: () => _enterApp('Google sign-in'),
+            onTap: _onGooglePressed,
           ),
           const SizedBox(height: 10),
           _socialButton(
             letter: 'f',
             letterColor: AppColors.facebook,
             label: 'Continue with Facebook',
-            onTap: () => _enterApp('Facebook sign-in'),
+            onTap: _onFacebookPressed,
           ),
           const SizedBox(height: 18),
           const Row(
@@ -364,8 +511,10 @@ class _AuthScreenState extends State<AuthScreen> {
             const SizedBox.shrink(),
           const SizedBox(height: 18),
           ElevatedButton(
-            onPressed: _onPrimaryPressed,
-            child: Text(_isLogin ? 'Log in' : 'Create account'),
+            onPressed: _busy ? null : _onPrimaryPressed,
+            child: Text(
+              _busy ? 'Please wait…' : (_isLogin ? 'Log in' : 'Create account'),
+            ),
           ),
           const SizedBox(height: 14),
           if (!_isLogin)
@@ -549,7 +698,7 @@ class _AuthScreenState extends State<AuthScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Enter your email and we will send you a reset link.',
+              'Enter your email and we will send you a 6-digit reset code.',
               style: TextStyle(fontSize: 13, color: AppColors.textMuted),
             ),
             const SizedBox(height: 14),
@@ -573,11 +722,27 @@ class _AuthScreenState extends State<AuthScreen> {
               minimumSize: const Size(0, 42),
               padding: const EdgeInsets.symmetric(horizontal: 18),
             ),
-            onPressed: () {
+            onPressed: () async {
+              final email = emailController.text.trim();
               Navigator.of(dialogContext).pop();
-              _showDesignOnly('Password reset');
+              if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+                _showError('Please enter a valid email address.');
+                return;
+              }
+              try {
+                await AuthService.forgotPassword(email: email);
+                if (!mounted) return;
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        OtpScreen(email: email, purpose: OtpPurpose.reset),
+                  ),
+                );
+              } on ApiException catch (e) {
+                _showError(e.message);
+              }
             },
-            child: const Text('Send reset link'),
+            child: const Text('Send OTP code'),
           ),
         ],
       ),
