@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
+import '../../widgets/app_top_bar.dart';
 
 /// Login / Sign Up screen — design-only replica of the website's
-/// /auth page (yubko.com). No API calls yet: buttons show a
-/// "design only" message until the web developer provides the APIs.
+/// /auth page (yubko.com), reached from the dashboard's Next button.
+/// "Continue as guest" is kept on this screen too (top bar).
+/// No API calls yet: buttons show a "design only" message until
+/// the web developer provides the APIs.
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -80,9 +83,10 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildTopBar(),
-              const SizedBox(height: 18),
-              _buildMarketingPanel(),
+              AppTopBar(
+                showBack: true,
+                onGuestTap: () => _showDesignOnly('Continue as guest'),
+              ),
               const SizedBox(height: 18),
               _buildFormCard(),
               const SizedBox(height: 20),
@@ -94,146 +98,6 @@ class _AuthScreenState extends State<AuthScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Row(
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            'G',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        const Text(
-          'GharMarkaz',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const Spacer(),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Text(
-              'Just looking?',
-              style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
-            ),
-            GestureDetector(
-              onTap: () => _showDesignOnly('Continue as guest'),
-              child: const Text(
-                'Continue as guest',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMarketingPanel() {
-    const points = [
-      '100% free property posting',
-      'No paid featured ads or ranking boosts',
-      'Contact owners by phone or WhatsApp',
-    ];
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.mint.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'A FAIR PROPERTY MARKETPLACE',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.1,
-                color: AppColors.mint,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Find a place that feels right.',
-            style: TextStyle(
-              fontSize: 23,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Browse homes across Pakistan without an account. Sign in only when you want to save a listing, contact an owner, or post your own property.',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.onGreenBody,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 14),
-          for (final point in points)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 7),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    size: 17,
-                    color: AppColors.emerald,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      point,
-                      style: const TextStyle(fontSize: 13, color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 6),
-          const Text(
-            'We never charge to list a property and do not sell priority placement.',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontStyle: FontStyle.italic,
-              color: AppColors.onGreenMuted,
-            ),
-          ),
-        ],
       ),
     );
   }
