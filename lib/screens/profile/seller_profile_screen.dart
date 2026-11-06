@@ -155,6 +155,26 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                       color: AppColors.textMuted,
                     ),
                   ),
+                  if (_myRating > 0) ...[
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(0, 40),
+                        backgroundColor: AppColors.primary,
+                      ),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: AppColors.primary,
+                            content: Text(
+                              'Rating submitted in the design preview.',
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Submit Rating'),
+                    ),
+                  ],
                 ],
               ),
             ),

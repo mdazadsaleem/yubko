@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yubko/main.dart';
 
@@ -51,5 +52,54 @@ void main() {
     expect(find.text('Search'), findsWidgets);
     expect(find.text('Saved'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
+  });
+  testWidgets('Top Searches and full property filters are present', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const YubkoApp());
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.tap(find.text('Continue as guest'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Top Searches'), findsWidgets);
+    expect(find.text('Have a property to sell or rent?'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.search).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Filters'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Society / Area'), findsOneWidget);
+    expect(find.text('Minimum Price'), findsOneWidget);
+    expect(find.text('Maximum Price'), findsOneWidget);
+    expect(find.text('Property Size'), findsOneWidget);
+    expect(find.text('Amenities'), findsOneWidget);
+  });
+
+  testWidgets('Roommates filters and post form are present', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const YubkoApp());
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.tap(find.text('Continue as guest'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Roommates').first);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Available Roommates & Spaces across Pakistan'),
+      findsOneWidget,
+    );
+    expect(find.text('Gender Preference'), findsOneWidget);
+    expect(find.text('Non-smoker only'), findsOneWidget);
+    expect(find.text('Sort by'), findsOneWidget);
+
+    await tester.tap(find.text('Post Roommate Ad'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Your Name'), findsOneWidget);
+    expect(find.text('Room Type'), findsOneWidget);
+    expect(find.text('Monthly Budget (PKR)'), findsOneWidget);
   });
 }

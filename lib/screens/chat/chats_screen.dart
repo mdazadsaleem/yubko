@@ -3,12 +3,33 @@ import 'package:flutter/material.dart';
 import '../../data/dummy_data.dart';
 import '../../theme/app_theme.dart';
 
-/// Chats list — conversations with sellers (design only).
-class ChatsScreen extends StatelessWidget {
+/// Chats list — conversations with sellers (design only),
+/// with search by seller, property or message.
+class ChatsScreen extends StatefulWidget {
   const ChatsScreen({super.key});
 
   @override
+  State<ChatsScreen> createState() => _ChatsScreenState();
+}
+
+class _ChatsScreenState extends State<ChatsScreen> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final query = _searchController.text.trim().toLowerCase();
+    final conversations = dummyConversations.where((c) {
+      if (query.isEmpty) return true;
+      return '${c.sellerName} ${c.propertyTitle} ${c.lastMessage}'
+          .toLowerCase()
+          .contains(query);
+    }).toList();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -23,103 +44,127 @@ class ChatsScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView(
+      body: Column(
         children: [
-          for (final c in dummyConversations)
-            ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 6,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                hintText: 'Search chats',
+                prefixIcon: Icon(Icons.search),
               ),
-              leading: CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.primary,
-                child: Text(
-                  c.sellerName[0],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 17,
-                  ),
-                ),
-              ),
-              title: Row(
-                children: [
-                  Expanded(
+            ),
+          ),
+          Expanded(
+            child: conversations.isEmpty
+                ? const Center(
                     child: Text(
-                      c.sellerName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14.5,
-                      ),
+                      'No chats match your search.',
+                      style: TextStyle(color: AppColors.textMuted),
                     ),
-                  ),
-                  Text(
-                    c.timeLabel,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    c.propertyTitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.emeraldDark,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
+                  )
+                : ListView(
                     children: [
-                      Expanded(
-                        child: Text(
-                          c.lastMessage,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: AppColors.textMuted,
+                      for (final c in conversations)
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
                           ),
-                        ),
-                      ),
-                      if (c.unread > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
+                          leading: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: AppColors.primary,
+                            child: Text(
+                              c.sellerName[0],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 17,
+                              ),
+                            ),
                           ),
-                          decoration: const BoxDecoration(
-                            color: AppColors.emerald,
-                            shape: BoxShape.circle,
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  c.sellerName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14.5,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                c.timeLabel,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ],
                           ),
-                          child: Text(
-                            '$c.unread',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                c.propertyTitle,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.emeraldDark,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      c.lastMessage,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ),
+                                  if (c.unread > 0)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 7,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.emerald,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        '$c.unread',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => ChatThreadScreen(
+                                sellerName: c.sellerName,
+                                propertyTitle: c.propertyTitle,
+                              ),
                             ),
                           ),
                         ),
                     ],
                   ),
-                ],
-              ),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => ChatThreadScreen(
-                    sellerName: c.sellerName,
-                    propertyTitle: c.propertyTitle,
-                  ),
-                ),
-              ),
-            ),
+          ),
         ],
       ),
     );

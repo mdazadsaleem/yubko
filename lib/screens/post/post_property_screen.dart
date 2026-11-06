@@ -24,11 +24,13 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
   int _beds = 3;
   int _baths = 2;
   int _photos = 0;
+  String _status = 'Ready to move';
   final Set<String> _amenities = {};
   final _titleController = TextEditingController();
   final _priceController = TextEditingController();
   final _sizeController = TextEditingController();
   final _descController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   @override
   void dispose() {
@@ -36,6 +38,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
     _priceController.dispose();
     _sizeController.dispose();
     _descController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -194,6 +197,35 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
             hintText: _isRent ? 'e.g. 50000 (per month)' : 'e.g. 14500000',
           ),
         ),
+        _label('Property Status'),
+        DropdownButtonFormField<String>(
+          initialValue: _status,
+          items: const [
+            DropdownMenuItem(
+              value: 'Ready to move',
+              child: Text('Ready to move'),
+            ),
+            DropdownMenuItem(
+              value: 'Under construction',
+              child: Text('Under construction'),
+            ),
+            DropdownMenuItem(
+              value: 'Possession Available',
+              child: Text('Possession Available'),
+            ),
+          ],
+          onChanged: (v) => setState(() => _status = v ?? _status),
+        ),
+        _label('Contact Phone / WhatsApp'),
+        TextField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
+            hintText: '3XX XXXXXXX',
+            prefixText: '+92 ',
+            prefixIcon: Icon(Icons.phone_outlined),
+          ),
+        ),
         _label('Bedrooms / Bathrooms'),
         Row(
           children: [
@@ -279,9 +311,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
           children: [
             for (var i = 0; i < 6; i++)
               GestureDetector(
-                onTap: () => setState(
-                  () => _photos = _photos < 6 ? _photos + 1 : _photos,
-                ),
+                onTap: () => setState(() => _photos = i < _photos ? i : i + 1),
                 child: Container(
                   decoration: BoxDecoration(
                     color: i < _photos ? AppColors.mint : Colors.white,
@@ -313,8 +343,8 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
         const SizedBox(height: 10),
         Text(
           _photos == 0
-              ? 'Tap a box to add a photo (design only — no real upload yet).'
-              : '$_photos photo(s) added (design only).',
+              ? 'Tap a box to add photos (design only — no real upload yet).'
+              : '$_photos photo(s) added. Tap a filled box to remove it and the photos after it.',
           style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
         ),
       ],
@@ -367,6 +397,29 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
                 ),
               ),
               Text(
+                'Status: $_status • Contact: ${_phoneController.text.isEmpty ? '—' : '+92 ${_phoneController.text}'}',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              if (_descController.text.trim().isNotEmpty)
+                Text(
+                  'Description: ${_descController.text.trim()}',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              if (_amenities.isNotEmpty)
+                Text(
+                  'Amenities: ${_amenities.join(', ')}',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              Text(
                 'Price: ${_priceController.text.isEmpty ? '—' : 'PKR ${_priceController.text}'} • Photos: $_photos',
                 style: const TextStyle(
                   fontSize: 12.5,
@@ -391,6 +444,25 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
         ),
       ],
     );
+  }
+
+  bool _validateEssentials() {
+    final missing = <String>[
+      if (_type == null) 'property type',
+      if (_titleController.text.trim().isEmpty) 'title',
+      if (_city == null) 'city',
+      if (_sizeController.text.trim().isEmpty || _unit == null) 'size and unit',
+      if (_priceController.text.trim().isEmpty) 'asking price',
+      if (_phoneController.text.trim().isEmpty) 'contact phone',
+    ];
+    if (missing.isEmpty) return true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.error,
+        content: Text('Please add: ${missing.join(', ')}.'),
+      ),
+    );
+    return false;
   }
 
   void _publish() {
@@ -449,6 +521,7 @@ class _PostPropertyScreenState extends State<PostPropertyScreen> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
+                    if (_step == 0 && !_validateEssentials()) return;
                     if (_step < 2) {
                       setState(() => _step++);
                     } else {

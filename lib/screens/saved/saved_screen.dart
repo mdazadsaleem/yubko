@@ -1,28 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../data/dummy_data.dart';
+import '../../data/saved_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../properties/property_detail_screen.dart';
 
 /// Saved / Wishlist — the website's heart-saved listings.
-/// Design only: starts with sample saved homes; tapping the heart
-/// removes an item from this list.
-class SavedScreen extends StatefulWidget {
+/// The hearts are shared with Home, Search and Property Detail:
+/// saving or removing a property anywhere updates this list.
+class SavedScreen extends StatelessWidget {
   const SavedScreen({super.key, this.isTab = false});
 
   final bool isTab;
-
-  @override
-  State<SavedScreen> createState() => _SavedScreenState();
-}
-
-class _SavedScreenState extends State<SavedScreen> {
-  final List<Property> _saved = [
-    dummyProperties[0],
-    dummyProperties[2],
-    dummyProperties[6],
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +20,7 @@ class _SavedScreenState extends State<SavedScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: !widget.isTab,
+        automaticallyImplyLeading: !isTab,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         title: const Text(
           'Saved Homes',
@@ -41,8 +31,14 @@ class _SavedScreenState extends State<SavedScreen> {
           ),
         ),
       ),
-      body: _saved.isEmpty
-          ? const Center(
+      body: ValueListenableBuilder<Set<String>>(
+        valueListenable: SavedStore.ids,
+        builder: (context, savedIds, _) {
+          final saved = dummyProperties
+              .where((p) => savedIds.contains(p.id))
+              .toList();
+          if (saved.isEmpty) {
+            return const Center(
               child: Padding(
                 padding: EdgeInsets.all(28),
                 child: Column(
@@ -62,23 +58,34 @@ class _SavedScreenState extends State<SavedScreen> {
                   ],
                 ),
               ),
-            )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              children: [
-                for (final p in _saved)
-                  PropertyCard(
-                    property: p,
-                    saved: true,
-                    onSaveTap: () => setState(() => _saved.remove(p)),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => PropertyDetailScreen(property: p),
-                      ),
+            );
+          }
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  '${saved.length} saved properties',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              for (final p in saved)
+                PropertyCard(
+                  property: p,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => PropertyDetailScreen(property: p),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

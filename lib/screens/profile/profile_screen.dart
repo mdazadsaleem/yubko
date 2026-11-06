@@ -5,10 +5,12 @@ import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../chat/chats_screen.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../info/contact_screen.dart';
 import '../info/info_screen.dart';
 import '../properties/property_detail_screen.dart';
 import '../roommates/roommates_screen.dart';
 import '../saved/saved_screen.dart';
+import 'settings_screen.dart';
 
 /// Profile tab — user header, My Ads, and menu links to the other
 /// app sections and the website's static pages. Design only.
@@ -77,7 +79,7 @@ class ProfileScreen extends StatelessWidget {
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Row(
+              child: Row(
                 children: [
                   CircleAvatar(
                     radius: 27,
@@ -121,7 +123,14 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(Icons.edit_outlined, color: Colors.white, size: 20),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    onPressed: () => _open(context, const SettingsScreen()),
+                  ),
                 ],
               ),
             ),
@@ -170,6 +179,13 @@ class ProfileScreen extends StatelessWidget {
             ),
             _menuTile(
               context,
+              Icons.settings_outlined,
+              'Settings',
+              'Edit profile and notifications',
+              () => _open(context, const SettingsScreen()),
+            ),
+            _menuTile(
+              context,
               Icons.help_outline,
               'FAQs',
               'Common questions',
@@ -187,7 +203,7 @@ class ProfileScreen extends StatelessWidget {
               Icons.call_outlined,
               'Contact Us',
               '+92 51 889 4427',
-              () => _open(context, const InfoScreen(kind: InfoKind.contact)),
+              () => _open(context, const ContactScreen()),
             ),
             _menuTile(
               context,
