@@ -743,7 +743,12 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
               // Categories
-              _sectionTitle('CATEGORIES', 'Browse by property type'),
+              _sectionTitle(
+                'CATEGORIES',
+                'Browse by property type',
+                subtitle:
+                    'Explore featured property categories across major cities with instant filtering',
+              ),
               Row(
                 children: [
                   _CategoryCard(
