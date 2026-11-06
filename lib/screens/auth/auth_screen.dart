@@ -291,15 +291,9 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppTopBar(showBack: true, onGuestTap: _enterAsGuest),
+              const AppTopBar(showBack: true),
               const SizedBox(height: 18),
               _buildFormCard(),
-              const SizedBox(height: 20),
-              const Text(
-                '© 2026 GharMarkaz. Developed for Pakistan Real Estate Market.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
-              ),
             ],
           ),
         ),
@@ -357,6 +351,23 @@ class _AuthScreenState extends State<AuthScreen> {
             letterColor: AppColors.facebook,
             label: 'Continue with Facebook',
             onTap: _onFacebookPressed,
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _enterAsGuest,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              foregroundColor: AppColors.primary,
+            ),
+            icon: const Icon(Icons.person_outline, size: 19),
+            label: const Text(
+              'Continue as guest',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
           ),
           const SizedBox(height: 18),
           const Row(

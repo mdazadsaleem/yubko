@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Header used on the dashboard and auth screens: GharMarkaz logo
-/// and name on the left. When [onGuestTap] is given, the right side
-/// shows "Just looking? / Continue as guest" — same as the website.
-/// Optionally shows a back button.
+/// Header used on the dashboard and auth screens: back button
+/// (optional), GharMarkaz logo and name. "Continue as guest" used
+/// to live here — it overflowed on narrow screens, so it now sits
+/// as a button on the auth screen itself.
 class AppTopBar extends StatelessWidget {
-  const AppTopBar({super.key, this.onGuestTap, this.showBack = false});
+  const AppTopBar({super.key, this.showBack = false});
 
-  final VoidCallback? onGuestTap;
   final bool showBack;
 
   @override
@@ -42,37 +41,17 @@ class AppTopBar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        const Text(
-          'GharMarkaz',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+        const Flexible(
+          child: Text(
+            'GharMarkaz',
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
-        const Spacer(),
-        if (onGuestTap != null)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'Just looking?',
-                style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
-              ),
-              GestureDetector(
-                onTap: onGuestTap,
-                child: const Text(
-                  'Continue as guest',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ],
-          ),
       ],
     );
   }
