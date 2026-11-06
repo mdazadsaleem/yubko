@@ -16,10 +16,10 @@ class MarketingPanel extends StatelessWidget {
       'Contact owners by phone or WhatsApp',
     ];
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: AppColors.primary,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,58 +33,61 @@ class MarketingPanel extends StatelessWidget {
             child: const Text(
               'A FAIR PROPERTY MARKETPLACE',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.1,
                 color: AppColors.mint,
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           const Text(
             'Find a place that feels right.',
             style: TextStyle(
-              fontSize: 23,
+              fontSize: 30,
               fontWeight: FontWeight.w800,
               color: Colors.white,
               height: 1.2,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           const Text(
             'Browse homes across Pakistan without an account. Sign in only when you want to save a listing, contact an owner, or post your own property.',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 15,
               color: AppColors.onGreenBody,
-              height: 1.45,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
           for (final point in points)
             Padding(
-              padding: const EdgeInsets.only(bottom: 7),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
                   const Icon(
                     Icons.check_circle,
-                    size: 17,
+                    size: 19,
                     color: AppColors.emerald,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       point,
-                      style: const TextStyle(fontSize: 13, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           const Text(
             'We never charge to list a property and do not sell priority placement.',
             style: TextStyle(
-              fontSize: 11.5,
+              fontSize: 12.5,
               fontStyle: FontStyle.italic,
               color: AppColors.onGreenMuted,
             ),

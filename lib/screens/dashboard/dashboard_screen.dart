@@ -17,15 +17,15 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const AppTopBar(),
-              const SizedBox(height: 18),
+              const Spacer(flex: 3),
               const MarketingPanel(),
-              const SizedBox(height: 22),
+              const Spacer(flex: 2),
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).push(
@@ -41,7 +41,7 @@ class DashboardScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               const Text(
                 '© 2026 GharMarkaz. Developed for Pakistan Real Estate Market.',
                 textAlign: TextAlign.center,

@@ -4,7 +4,6 @@ import '../../data/dummy_data.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../chat/chats_screen.dart';
-import '../info/contact_screen.dart';
 import '../info/info_screen.dart';
 import '../post/post_property_screen.dart';
 import '../profile/profile_screen.dart';
@@ -82,7 +81,7 @@ class _MainShellState extends State<MainShell> {
 
 /// Home tab — the website homepage, in the website's order:
 /// hero + search card, stats, categories, newest properties,
-/// popular areas, post-property steps, safety, footer.
+/// popular areas, post-property steps, safety, final CTA.
 class HomeTab extends StatefulWidget {
   const HomeTab({
     super.key,
@@ -98,7 +97,6 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  final _scrollController = ScrollController();
   bool _buy = true;
   String? _city;
   String? _type;
@@ -259,157 +257,6 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _footerLink(String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 12.5, color: AppColors.textMuted),
-        ),
-      ),
-    );
-  }
-
-  Widget _footer(BuildContext context) {
-    void open(Widget page) {
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
-    }
-
-    Widget column(String title, List<(String, VoidCallback)> links) {
-      return Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 6),
-            for (final (label, onTap) in links) _footerLink(label, onTap),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.only(top: 18),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.border)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.home_work_rounded, color: AppColors.primary, size: 22),
-              SizedBox(width: 8),
-              Text(
-                'GharMark',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-              ),
-            ],
-          ),
-          const SizedBox(height: 7),
-          const Text(
-            "Pakistan's transparent property marketplace. Browse as a guest, contact sellers directly, and post your listings for free.",
-            style: TextStyle(
-              fontSize: 12.5,
-              color: AppColors.textMuted,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            '+92 51 889 4427  •  support@yubko.pk',
-            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              column('EXPLORE', [
-                (
-                  'Buy Properties',
-                  () => open(const PropertiesScreen(initialIsRent: false)),
-                ),
-                (
-                  'Rent Properties',
-                  () => open(const PropertiesScreen(initialIsRent: true)),
-                ),
-                (
-                  'Popular Areas',
-                  () => _scrollController.animateTo(
-                    0,
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOut,
-                  ),
-                ),
-              ]),
-              column('SELL & RENT', [
-                ('Post Property Free', widget.onPostTap),
-                (
-                  'Safety Guidelines',
-                  () => open(const InfoScreen(kind: InfoKind.safety)),
-                ),
-                ('FAQs', () => open(const InfoScreen(kind: InfoKind.faqs))),
-              ]),
-              column('COMPANY', [
-                ('Contact Us', () => open(const ContactScreen())),
-                (
-                  'Privacy Policy',
-                  () => open(const InfoScreen(kind: InfoKind.privacy)),
-                ),
-                (
-                  'Terms of Service',
-                  () => open(const InfoScreen(kind: InfoKind.terms)),
-                ),
-              ]),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            '© 2026 GharMark. All rights reserved',
-            style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 4,
-            children: [
-              for (final (i, link) in [
-                (
-                  'Privacy Policy',
-                  () => open(const InfoScreen(kind: InfoKind.privacy)),
-                ),
-                (
-                  'Terms of Service',
-                  () => open(const InfoScreen(kind: InfoKind.terms)),
-                ),
-                (
-                  'Safety Guidelines',
-                  () => open(const InfoScreen(kind: InfoKind.safety)),
-                ),
-                ('FAQs', () => open(const InfoScreen(kind: InfoKind.faqs))),
-                ('Contact Us', () => open(const ContactScreen())),
-              ].indexed)
-                InkWell(
-                  onTap: link.$2,
-                  child: Text(
-                    '${i == 0 ? '' : '· '}${link.$1}',
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _field(String label, String? value, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -511,7 +358,6 @@ class _HomeTabState extends State<HomeTab> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1054,8 +900,6 @@ class _HomeTabState extends State<HomeTab> {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
-              _footer(context),
             ],
           ),
         ),
