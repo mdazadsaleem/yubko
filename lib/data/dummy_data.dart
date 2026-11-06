@@ -88,7 +88,6 @@ const List<Property> dummyProperties = [
     phoneFull: '+92 300 1112233',
     icon: Icons.house_rounded,
     photoCount: 6,
-    views: 132,
     amenities: [
       'Parking',
       'Gas available',
