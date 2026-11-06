@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 /// Header used on the dashboard and auth screens: GharMarkaz logo
-/// and name on the left, "Just looking? / Continue as guest" on the
-/// right — same as the website. Optionally shows a back button.
+/// and name on the left. When [onGuestTap] is given, the right side
+/// shows "Just looking? / Continue as guest" — same as the website.
+/// Optionally shows a back button.
 class AppTopBar extends StatelessWidget {
-  const AppTopBar({super.key, required this.onGuestTap, this.showBack = false});
+  const AppTopBar({super.key, this.onGuestTap, this.showBack = false});
 
-  final VoidCallback onGuestTap;
+  final VoidCallback? onGuestTap;
   final bool showBack;
 
   @override
@@ -50,27 +51,28 @@ class AppTopBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Text(
-              'Just looking?',
-              style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
-            ),
-            GestureDetector(
-              onTap: onGuestTap,
-              child: const Text(
-                'Continue as guest',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                  decoration: TextDecoration.underline,
+        if (onGuestTap != null)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Text(
+                'Just looking?',
+                style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+              ),
+              GestureDetector(
+                onTap: onGuestTap,
+                child: const Text(
+                  'Continue as guest',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
       ],
     );
   }

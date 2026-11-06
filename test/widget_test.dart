@@ -12,9 +12,9 @@ void main() {
     expect(find.text('GharMarkaz'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 1800));
 
-    // Dashboard: marketing panel + guest option + Next button.
+    // Dashboard: marketing panel + Next button (no guest option here).
     expect(find.text('Find a place that feels right.'), findsOneWidget);
-    expect(find.text('Continue as guest'), findsOneWidget);
+    expect(find.text('Continue as guest'), findsNothing);
     expect(find.text('Next'), findsOneWidget);
 
     // Next moves to the Login / Sign Up screen.
@@ -40,12 +40,14 @@ void main() {
     expect(find.text('Create account'), findsOneWidget);
   });
 
-  testWidgets('Guest from dashboard opens the app home', (
+  testWidgets('Guest from the auth screen opens the app home', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const YubkoApp());
     await tester.pump(const Duration(milliseconds: 1800));
 
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Continue as guest'));
     await tester.pumpAndSettle();
 
@@ -61,6 +63,8 @@ void main() {
   ) async {
     await tester.pumpWidget(const YubkoApp());
     await tester.pump(const Duration(milliseconds: 1800));
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Continue as guest'));
     await tester.pumpAndSettle();
 
@@ -84,6 +88,8 @@ void main() {
   ) async {
     await tester.pumpWidget(const YubkoApp());
     await tester.pump(const Duration(milliseconds: 1800));
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Continue as guest'));
     await tester.pumpAndSettle();
 

@@ -4,22 +4,14 @@ import '../../theme/app_theme.dart';
 import '../../widgets/app_top_bar.dart';
 import '../../widgets/marketing_panel.dart';
 import '../auth/auth_screen.dart';
-import '../home/home_screen.dart';
 
 /// Dashboard (first) screen of the app: the website's green
 /// marketing panel, kept exactly as designed. The Next button
-/// moves to the Login / Sign Up screen. "Continue as guest" is
-/// available here and also on the Login / Sign Up screen.
+/// moves to the Login / Sign Up screen. There is no guest option
+/// on this screen (user, 2026-11-06) — "Continue as guest" lives
+/// on the Login / Sign Up screen only.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
-
-  void _guest(BuildContext context) {
-    // Design phase: guest browsing opens the app preview directly.
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const MainShell()),
-      (route) => false,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +22,7 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppTopBar(onGuestTap: () => _guest(context)),
+              const AppTopBar(),
               const SizedBox(height: 18),
               const MarketingPanel(),
               const SizedBox(height: 22),
