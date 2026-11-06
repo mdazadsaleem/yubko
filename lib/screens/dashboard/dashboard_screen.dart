@@ -4,6 +4,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/app_top_bar.dart';
 import '../../widgets/marketing_panel.dart';
 import '../auth/auth_screen.dart';
+import '../home/home_screen.dart';
 
 /// Dashboard (first) screen of the app: the website's green
 /// marketing panel, kept exactly as designed. The Next button
@@ -13,13 +14,10 @@ class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   void _guest(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: AppColors.primary,
-        content: Text(
-          'Continue as guest — design only. Home screen coming next.',
-        ),
-      ),
+    // Design phase: guest browsing opens the app preview directly.
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      (route) => false,
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
 import '../../widgets/app_top_bar.dart';
+import '../home/home_screen.dart';
 
 /// Login / Sign Up screen — design-only replica of the website's
 /// /auth page (yubko.com), reached from the dashboard's Next button.
@@ -60,7 +61,22 @@ class _AuthScreenState extends State<AuthScreen> {
       );
       return;
     }
-    _showDesignOnly(_isLogin ? 'Login' : 'Create Account');
+    _enterApp(_isLogin ? 'Login' : 'Create Account');
+  }
+
+  /// Design phase only: entering the app shows the design preview.
+  /// In Phase 2 this is replaced by the real API login / sign up.
+  void _enterApp(String action) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.primary,
+        content: Text('$action — design preview (no API yet).'),
+      ),
+    );
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      (route) => false,
+    );
   }
 
   int get _passwordScore {
@@ -85,7 +101,7 @@ class _AuthScreenState extends State<AuthScreen> {
             children: [
               AppTopBar(
                 showBack: true,
-                onGuestTap: () => _showDesignOnly('Continue as guest'),
+                onGuestTap: () => _enterApp('Continue as guest'),
               ),
               const SizedBox(height: 18),
               _buildFormCard(),
@@ -144,14 +160,14 @@ class _AuthScreenState extends State<AuthScreen> {
             letter: 'G',
             letterColor: const Color(0xFFEA4335),
             label: 'Continue with Google',
-            onTap: () => _showDesignOnly('Google sign-in'),
+            onTap: () => _enterApp('Google sign-in'),
           ),
           const SizedBox(height: 10),
           _socialButton(
             letter: 'f',
             letterColor: AppColors.facebook,
             label: 'Continue with Facebook',
-            onTap: () => _showDesignOnly('Facebook sign-in'),
+            onTap: () => _enterApp('Facebook sign-in'),
           ),
           const SizedBox(height: 18),
           const Row(

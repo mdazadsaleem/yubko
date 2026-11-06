@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/splash/splash_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -16,7 +16,7 @@ class YubkoApp extends StatelessWidget {
       title: 'GharMarkaz',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      home: const DashboardScreen(),
+      home: const SplashScreen(),
     );
   }
 }
