@@ -1,18 +1,17 @@
 import 'package:flutter/foundation.dart';
 
-/// Shared Saved Homes state for the design phase.
+/// Shared Saved Homes state.
 ///
 /// The same heart state is used by Home, Search, Property Detail,
-/// Seller Profile, My Ads and the Saved tab. In Phase 2 this is
-/// replaced by the signed-in user's saved listings from the API.
+/// Seller Profile, My Ads and the Saved tab. It starts EMPTY on
+/// purpose: a property becomes a favourite only when the user
+/// taps its heart — never pre-selected.
 class SavedStore {
   SavedStore._();
 
-  static final ValueNotifier<Set<String>> ids = ValueNotifier<Set<String>>({
-    'p1',
-    'p3',
-    'p7',
-  });
+  static final ValueNotifier<Set<String>> ids = ValueNotifier<Set<String>>(
+    <String>{},
+  );
 
   static bool contains(String propertyId) => ids.value.contains(propertyId);
 

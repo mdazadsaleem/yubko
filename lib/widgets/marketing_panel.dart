@@ -16,10 +16,10 @@ class MarketingPanel extends StatelessWidget {
       'Contact owners by phone or WhatsApp',
     ];
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(34),
       decoration: BoxDecoration(
         color: AppColors.primary,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,11 +40,11 @@ class MarketingPanel extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           const Text(
             'Find a place that feels right.',
             style: TextStyle(
-              fontSize: 30,
+              fontSize: 33,
               fontWeight: FontWeight.w800,
               color: Colors.white,
               height: 1.2,
@@ -54,12 +54,12 @@ class MarketingPanel extends StatelessWidget {
           const Text(
             'Browse homes across Pakistan without an account. Sign in only when you want to save a listing, contact an owner, or post your own property.',
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16,
               color: AppColors.onGreenBody,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           for (final point in points)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -67,7 +67,7 @@ class MarketingPanel extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.check_circle,
-                    size: 19,
+                    size: 20,
                     color: AppColors.emerald,
                   ),
                   const SizedBox(width: 8),
