@@ -41,12 +41,6 @@ class DashboardScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
-              const Text(
-                '© 2026 GharMarkaz. Developed for Pakistan Real Estate Market.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
-              ),
             ],
           ),
         ),
