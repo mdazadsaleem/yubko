@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../services/session_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_top_bar.dart';
+import '../../widgets/social_icons.dart';
 import '../home/home_screen.dart';
 import 'otp_screen.dart';
 
@@ -291,7 +292,7 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppTopBar(showBack: true),
+              const AppTopBar(),
               const SizedBox(height: 18),
               _buildFormCard(),
             ],
@@ -340,15 +341,13 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           const SizedBox(height: 18),
           _socialButton(
-            letter: 'G',
-            letterColor: const Color(0xFFEA4335),
+            icon: const GoogleIcon(),
             label: 'Continue with Google',
             onTap: _onGooglePressed,
           ),
           const SizedBox(height: 10),
           _socialButton(
-            letter: 'f',
-            letterColor: AppColors.facebook,
+            icon: const FacebookIcon(),
             label: 'Continue with Facebook',
             onTap: _onFacebookPressed,
           ),
@@ -604,8 +603,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _socialButton({
-    required String letter,
-    required Color letterColor,
+    required Widget icon,
     required String label,
     required VoidCallback onTap,
   }) {
@@ -620,14 +618,7 @@ class _AuthScreenState extends State<AuthScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            letter,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: letterColor,
-            ),
-          ),
+          icon,
           const SizedBox(width: 10),
           Text(
             label,
