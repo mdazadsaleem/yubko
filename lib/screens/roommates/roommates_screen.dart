@@ -5,7 +5,7 @@ import '../../theme/app_theme.dart';
 import '../chat/chats_screen.dart';
 import 'post_roommate_screen.dart';
 
-enum RoommateSort { newest, budgetLow, budgetHigh }
+enum RoommateSort { newest, budgetLow, budgetHigh, mostViewed }
 
 /// Roommates — the website's /roommates section: search, purpose,
 /// city, room type, gender, budget and non-smoker filters, sort,
@@ -69,8 +69,22 @@ class _RoommatesScreenState extends State<RoommatesScreen> {
       list.sort((a, b) => a.budgetValue.compareTo(b.budgetValue));
     } else if (_sort == RoommateSort.budgetHigh) {
       list.sort((a, b) => b.budgetValue.compareTo(a.budgetValue));
+    } else if (_sort == RoommateSort.mostViewed) {
+      list.sort((a, b) => b.views.compareTo(a.views));
     }
     return list;
+  }
+
+  void _clearAll() {
+    setState(() {
+      _searchController.clear();
+      _purpose = 'All';
+      _city = null;
+      _roomType = null;
+      _gender = 'Any Gender';
+      _budgetChip = null;
+      _nonSmokerOnly = false;
+    });
   }
 
   void _viewProfile(RoommateProfile profile) {
@@ -425,14 +439,21 @@ class _RoommatesScreenState extends State<RoommatesScreen> {
                     DropdownMenuItem(
                       value: RoommateSort.budgetLow,
                       child: Text(
-                        'Budget: Low to High',
+                        'Price: Low to High',
                         style: TextStyle(fontSize: 12.5),
                       ),
                     ),
                     DropdownMenuItem(
                       value: RoommateSort.budgetHigh,
                       child: Text(
-                        'Budget: High to Low',
+                        'Price: High to Low',
+                        style: TextStyle(fontSize: 12.5),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: RoommateSort.mostViewed,
+                      child: Text(
+                        'Most Viewed',
                         style: TextStyle(fontSize: 12.5),
                       ),
                     ),
@@ -444,27 +465,51 @@ class _RoommatesScreenState extends State<RoommatesScreen> {
             ),
             const SizedBox(height: 10),
             if (list.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 28),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 28),
                 child: Column(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.group_outlined,
                       size: 48,
                       color: AppColors.textMuted,
                     ),
-                    SizedBox(height: 10),
-                    Text(
-                      'No roommates match these filters.',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'No roommates found yet',
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Try another city, room type or budget.',
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Try adjusting your filters, searching a different university or area, or post your own roommate ad to get started.',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12.5,
                         color: AppColors.textMuted,
+                        height: 1.45,
                       ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        OutlinedButton(
+                          onPressed: _clearAll,
+                          child: const Text('Clear All Filters'),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const PostRoommateScreen(),
+                            ),
+                          ),
+                          child: const Text('Post an Ad'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -608,16 +653,45 @@ class _RoommatesScreenState extends State<RoommatesScreen> {
                 ),
               ),
             const SizedBox(height: 6),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.mint,
+                borderRadius: BorderRadius.circular(14),
               ),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const PostRoommateScreen(),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Looking for a Roommate?',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  const Text(
+                    'Post your ad free in less than 2 minutes.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const PostRoommateScreen(),
+                      ),
+                    ),
+                    child: const Text('+ Post Roommate Ad'),
+                  ),
+                ],
               ),
-              child: const Text('Post Roommate Ad'),
             ),
           ],
         ),

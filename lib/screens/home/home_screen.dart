@@ -98,17 +98,33 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
+  final _scrollController = ScrollController();
   bool _buy = true;
   String? _city;
   String? _type;
   String? _unit;
-  final _sizeController = TextEditingController();
+  String? _size;
 
-  @override
-  void dispose() {
-    _sizeController.dispose();
-    super.dispose();
-  }
+  static const _sizeOptions = [
+    'Any',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '10',
+    '12',
+    '15',
+    '20',
+    '25',
+    '30',
+    '40',
+    '50',
+    '100',
+  ];
 
   Future<void> _pick(
     String title,
@@ -168,7 +184,7 @@ class _HomeTabState extends State<HomeTab> {
           initialIsRent: !_buy,
           initialCity: _city,
           initialType: _type,
-          initialSizeValue: double.tryParse(_sizeController.text.trim()),
+          initialSizeValue: _size == null ? null : double.tryParse(_size!),
           initialUnit: _unit,
         ),
       ),
@@ -176,12 +192,13 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _sizeInput() {
-    return TextField(
-      controller: _sizeController,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: const InputDecoration(
-        hintText: 'Property size',
-        prefixIcon: Icon(Icons.square_foot, size: 19),
+    return _field(
+      'Select Area Size',
+      _size == null ? null : 'Min $_size',
+      () => _pick(
+        'Property Size',
+        _sizeOptions,
+        (v) => setState(() => _size = v == 'Any' ? null : v),
       ),
     );
   }
@@ -267,7 +284,7 @@ class _HomeTabState extends State<HomeTab> {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),
             for (final (label, onTap) in links) _footerLink(label, onTap),
@@ -289,42 +306,56 @@ class _HomeTabState extends State<HomeTab> {
               Icon(Icons.home_work_rounded, color: AppColors.primary, size: 22),
               SizedBox(width: 8),
               Text(
-                'GharMarkaz',
+                'GharMark',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
               ),
             ],
           ),
           const SizedBox(height: 7),
           const Text(
-            "Pakistan's transparent real estate and rental marketplace. Browse as a guest, contact sellers directly, and post your listings for free.",
+            "Pakistan's transparent property marketplace. Browse as a guest, contact sellers directly, and post your listings for free.",
             style: TextStyle(
               fontSize: 12.5,
               color: AppColors.textMuted,
               height: 1.45,
             ),
           ),
+          const SizedBox(height: 8),
+          const Text(
+            '+92 51 889 4427  •  support@yubko.pk',
+            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+          ),
           const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              column('Quick Links', [
+              column('EXPLORE', [
                 (
-                  'Buy',
+                  'Buy Properties',
                   () => open(const PropertiesScreen(initialIsRent: false)),
                 ),
                 (
-                  'Rent',
+                  'Rent Properties',
                   () => open(const PropertiesScreen(initialIsRent: true)),
                 ),
-                ('Top Searches', _openTopSearches),
-                ('Roommates', () => open(const RoommatesScreen())),
+                (
+                  'Popular Areas',
+                  () => _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                  ),
+                ),
               ]),
-              column('Support', [
-                ('FAQs', () => open(const InfoScreen(kind: InfoKind.faqs))),
+              column('SELL & RENT', [
+                ('Post Property Free', widget.onPostTap),
                 (
                   'Safety Guidelines',
                   () => open(const InfoScreen(kind: InfoKind.safety)),
                 ),
+                ('FAQs', () => open(const InfoScreen(kind: InfoKind.faqs))),
+              ]),
+              column('COMPANY', [
                 ('Contact Us', () => open(const ContactScreen())),
                 (
                   'Privacy Policy',
@@ -339,13 +370,40 @@ class _HomeTabState extends State<HomeTab> {
           ),
           const SizedBox(height: 16),
           const Text(
-            '© 2026 GharMarkaz. Developed for Pakistan Real Estate Market.',
+            '© 2026 GharMark. All rights reserved',
             style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
           ),
-          const SizedBox(height: 4),
-          const Text(
-            '+92 51 889 4427  •  support@gharmark.pk',
-            style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 4,
+            children: [
+              for (final (i, link) in [
+                (
+                  'Privacy Policy',
+                  () => open(const InfoScreen(kind: InfoKind.privacy)),
+                ),
+                (
+                  'Terms of Service',
+                  () => open(const InfoScreen(kind: InfoKind.terms)),
+                ),
+                (
+                  'Safety Guidelines',
+                  () => open(const InfoScreen(kind: InfoKind.safety)),
+                ),
+                ('FAQs', () => open(const InfoScreen(kind: InfoKind.faqs))),
+                ('Contact Us', () => open(const ContactScreen())),
+              ].indexed)
+                InkWell(
+                  onTap: link.$2,
+                  child: Text(
+                    '${i == 0 ? '' : '· '}${link.$1}',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -453,6 +511,7 @@ class _HomeTabState extends State<HomeTab> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -479,7 +538,7 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                   const SizedBox(width: 9),
                   const Text(
-                    'GharMarkaz',
+                    'GharMark',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                   const Spacer(),
@@ -524,14 +583,33 @@ class _HomeTabState extends State<HomeTab> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Explore homes, plots and commercial property across Pakistan. Browse freely, contact sellers directly, or post your property at no cost.',
+                'Explore homes, plots and commercial property across Pakistan. Browse freely, contact sellers directly and post your property for free.',
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.textMuted,
                   height: 1.45,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.mint,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  '100% free, no featured ads — (PKR)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -592,9 +670,7 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     const SizedBox(height: 8),
                     _field(
-                      _city == null
-                          ? 'Society / area — select a city first'
-                          : 'Society / area',
+                      _city == null ? 'Select a city first' : 'Society / area',
                       null,
                       () {
                         if (_city == null) {
@@ -667,18 +743,16 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
               // Categories
-              _sectionTitle(
-                'CATEGORIES',
-                'Browse by property type',
-                subtitle:
-                    'Explore featured property categories across major cities with instant filtering',
-              ),
+              _sectionTitle('CATEGORIES', 'Browse by property type'),
               Row(
                 children: [
                   _CategoryCard(
                     icon: Icons.house_rounded,
                     title: 'Houses & Hostels',
-                    subtitle: 'Family homes, hostels',
+                    countLabel:
+                        '${dummyProperties.where((e) => e.type == 'House' || e.type == 'Room / Hostel').length} Ads',
+                    subtitle:
+                        'Independent houses, family villas, upper/lower partitions & student/exec hostels',
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) =>
@@ -690,7 +764,10 @@ class _HomeTabState extends State<HomeTab> {
                   _CategoryCard(
                     icon: Icons.apartment_rounded,
                     title: 'Apartments & Flats',
-                    subtitle: 'Flats, penthouses',
+                    countLabel:
+                        '${dummyProperties.where((e) => e.type == 'Flat / Apartment').length} Ads',
+                    subtitle:
+                        'Luxury residential apartments, studio flats & penthouses across top locations',
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const PropertiesScreen(
@@ -703,7 +780,10 @@ class _HomeTabState extends State<HomeTab> {
                   _CategoryCard(
                     icon: Icons.domain_rounded,
                     title: 'Commercial & Plots',
-                    subtitle: 'Shops, offices, plots',
+                    countLabel:
+                        '${dummyProperties.where((e) => e.type.contains('Plot') || e.type == 'Shop' || e.type == 'Office').length} Ads',
+                    subtitle:
+                        'Shops, office spaces, commercial plazas, residential & industrial plots',
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const PropertiesScreen(
@@ -767,8 +847,6 @@ class _HomeTabState extends State<HomeTab> {
               _sectionTitle(
                 'RECENT LISTINGS',
                 'Newest properties',
-                subtitle:
-                    'Freshly added listings direct from owners and verified agents',
                 actionLabel: 'View all properties',
                 onAction: widget.onSearchTap,
               ),
@@ -845,7 +923,7 @@ class _HomeTabState extends State<HomeTab> {
                 'FOR PROPERTY OWNERS',
                 'Post a property for free in simple steps',
                 subtitle:
-                    'List your house, apartment, plot, or commercial space in minutes and connect with interested buyers directly without middleman fees.',
+                    'List your house, apartment, plot, or commercial space in minutes and connect with interested buyers and tenants across Pakistan.',
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -865,7 +943,7 @@ class _HomeTabState extends State<HomeTab> {
                 number: '02',
                 title: 'Upload clear photos',
                 text:
-                    'Showcase your property with bright photos of bedrooms, living areas, and facade to attract genuine inquiries.',
+                    'Showcase your property with bright photos of bedrooms, living areas, and facade to attract genuine interest.',
               ),
               const _StepTile(
                 number: '03',
@@ -1015,11 +1093,13 @@ class _CategoryCard extends StatelessWidget {
   const _CategoryCard({
     required this.icon,
     required this.title,
+    required this.countLabel,
     required this.subtitle,
     required this.onTap,
   });
   final IconData icon;
   final String title;
+  final String countLabel;
   final String subtitle;
   final VoidCallback onTap;
 
@@ -1050,6 +1130,15 @@ class _CategoryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 3),
+              Text(
+                countLabel,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.emeraldDark,
+                ),
+              ),
+              const SizedBox(height: 2),
               Text(
                 subtitle,
                 style: const TextStyle(

@@ -5,11 +5,16 @@ import '../../data/saved_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../chat/chats_screen.dart';
+import '../info/info_screen.dart';
 import '../profile/seller_profile_screen.dart';
 
-/// Property detail — the website's detail page in mobile form:
-/// gallery, price, key facts, description, location map, seller
-/// card with Chat / Call / WhatsApp, related properties.
+/// Property detail — mirrors the website's detail page (checked
+/// 2026-11-06): gallery with lightbox, title/location/price, meta
+/// line, For Sale + Verified chips, About this property, Amenities,
+/// Location with the privacy note, Property details rows, the
+/// "Listed by this owner" seller card (Reveal owner's number /
+/// WhatsApp / Message in App, Report this listing), and the safety
+/// reminder box. The site has NO related-properties section here.
 class PropertyDetailScreen extends StatefulWidget {
   const PropertyDetailScreen({super.key, required this.property});
 
@@ -34,41 +39,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     );
   }
 
-  Widget _fact(IconData icon, String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 6),
-      decoration: BoxDecoration(
-        color: AppColors.mint,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 19, color: AppColors.primary),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _heading(String text) => Padding(
     padding: const EdgeInsets.only(top: 22, bottom: 9),
     child: Text(
@@ -86,25 +56,56 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     );
   }
 
-  void _showPhoneDialog() {
-    setState(() => _phoneShown = true);
+  void _openLightbox() {
+    var index = _photoIndex;
     showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Seller phone number',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        content: Text(
-          '${p.sellerName}\n${p.phoneFull}\n\nDesign only — calling starts after API integration.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Close'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog.fullscreen(
+          backgroundColor: Colors.black,
+          child: Stack(
+            children: [
+              PageView.builder(
+                itemCount: p.photoCount,
+                controller: PageController(initialPage: _photoIndex),
+                onPageChanged: (i) => setDialogState(() => index = i),
+                itemBuilder: (_, _) => PropertyPhoto(property: p, height: 420),
+              ),
+              Positioned(
+                top: 14,
+                left: 0,
+                right: 0,
+                child: Text(
+                  '${index + 1} / ${p.photoCount}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                ),
+              ),
+              Positioned(
+                bottom: 18,
+                left: 0,
+                right: 0,
+                child: Text(
+                  '${p.title} – ${index + 1}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -165,70 +166,41 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     );
   }
 
-  Widget _bottomBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.border)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(46),
-                    side: const BorderSide(color: AppColors.border),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    foregroundColor: AppColors.primary,
-                  ),
-                  onPressed: _showPhoneDialog,
-                  icon: const Icon(Icons.call_outlined, size: 19),
-                  label: const Text('Call'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(46),
-                    backgroundColor: AppColors.primary,
-                  ),
-                  onPressed: _openChat,
-                  icon: const Icon(Icons.chat_bubble_outline, size: 19),
-                  label: const Text('Chat'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: AppColors.whatsapp,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: IconButton(
-                  onPressed: () => _soon('Chat on WhatsApp'),
-                  icon: const Icon(Icons.chat, color: Colors.white, size: 21),
-                ),
-              ),
-            ],
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+            ),
           ),
-        ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final related = dummyProperties
-        .where((x) => x.id != p.id && x.city == p.city)
-        .toList();
+    final sellerListings = dummyProperties
+        .where((x) => x.sellerName == p.sellerName)
+        .length;
+    final metaParts = <String>[
+      p.sizeLabel,
+      if (p.beds > 0) '${p.beds} beds',
+      if (p.baths > 0) '${p.baths} baths',
+      '${p.views} views',
+      p.postedLabel,
+    ];
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -264,47 +236,49 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _bottomBar(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gallery (design placeholder)
-            Stack(
-              children: [
-                SizedBox(
-                  height: 230,
-                  child: PageView.builder(
-                    itemCount: p.photoCount,
-                    onPageChanged: (index) =>
-                        setState(() => _photoIndex = index),
-                    itemBuilder: (_, _) =>
-                        PropertyPhoto(property: p, height: 230),
+            // Gallery — tap opens the lightbox, like the website
+            GestureDetector(
+              onTap: _openLightbox,
+              child: Stack(
+                children: [
+                  SizedBox(
+                    height: 230,
+                    child: PageView.builder(
+                      itemCount: p.photoCount,
+                      onPageChanged: (index) =>
+                          setState(() => _photoIndex = index),
+                      itemBuilder: (_, _) =>
+                          PropertyPhoto(property: p, height: 230),
+                    ),
                   ),
-                ),
-                Positioned(
-                  bottom: 10,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Text(
-                      '${_photoIndex + 1} / ${p.photoCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                  Positioned(
+                    bottom: 10,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        '${p.photoCount} photo${p.photoCount == 1 ? '' : 's'}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
@@ -344,14 +318,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 3),
-                            Text(
-                              'Posted ${p.postedLabel}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -365,58 +331,53 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  // Key facts — same six tiles as the website
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _fact(
-                          Icons.sell_outlined,
-                          'PURPOSE',
-                          p.isRent ? 'For Rent' : 'For Sale',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _fact(Icons.square_foot, 'SIZE', p.sizeLabel),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _fact(
-                          Icons.bed_outlined,
-                          'BEDROOMS',
-                          p.beds > 0 ? '${p.beds} Beds' : '—',
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 8),
+                  Text(
+                    metaParts.join(' · '),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(
-                        child: _fact(
-                          Icons.bathtub_outlined,
-                          'BATHROOMS',
-                          p.baths > 0 ? '${p.baths} Baths' : '—',
+                      Chip(
+                        label: Text(
+                          p.isRent ? 'For Rent' : 'For Sale',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
+                        backgroundColor: AppColors.emeraldDark,
+                        side: BorderSide.none,
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: _fact(Icons.home_work_outlined, 'TYPE', p.type),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _fact(
-                          Icons.verified_outlined,
-                          'STATUS',
-                          p.status,
+                      const Chip(
+                        avatar: Icon(
+                          Icons.shield_outlined,
+                          size: 15,
+                          color: AppColors.primary,
                         ),
+                        label: Text(
+                          'Verified listing',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        backgroundColor: AppColors.mint,
+                        side: BorderSide.none,
                       ),
                     ],
                   ),
-                  _heading('Property description'),
+                  _heading('About this property'),
                   Text(
-                    p.description,
+                    p.description.isEmpty
+                        ? 'No description added yet'
+                        : p.description,
                     style: const TextStyle(
                       fontSize: 13.5,
                       color: AppColors.textPrimary,
@@ -445,8 +406,24 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           ),
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'No additional amenities',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                   ],
                   _heading('Location'),
+                  Text(
+                    p.location,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Container(
                     height: 150,
                     width: double.infinity,
@@ -475,44 +452,47 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.pin_drop_outlined,
-                        size: 16,
-                        color: AppColors.textMuted,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Approximate location: ${p.location}',
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => _soon('Open directions'),
-                        child: const Text(
-                          'Open directions',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                   const Text(
-                    'Approximate location shown. Exact address shared after contact.',
+                    'Map location is approximate for privacy; exact location is shared by the owner after contact.',
                     style: TextStyle(
                       fontSize: 11.5,
                       color: AppColors.textMuted,
+                      height: 1.45,
                     ),
                   ),
-                  _heading('Seller'),
-                  // Seller card — same as the website
+                  _heading('Property details'),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      children: [
+                        _detailRow('Property Type', p.type),
+                        _detailRow(
+                          'Purpose',
+                          p.isRent ? 'For Rent' : 'For Sale',
+                        ),
+                        _detailRow('City', p.city),
+                        _detailRow('Society/Area', p.area),
+                        _detailRow('Area', p.sizeLabel),
+                        _detailRow('Bedrooms', p.beds > 0 ? '${p.beds}' : '—'),
+                        _detailRow(
+                          'Bathrooms',
+                          p.baths > 0 ? '${p.baths}' : '—',
+                        ),
+                        _detailRow('Added', p.addedDate),
+                        _detailRow('Views', '${p.views}'),
+                        _detailRow('Verify Status', 'Verified'),
+                      ],
+                    ),
+                  ),
+                  _heading('Listed by this owner'),
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -555,7 +535,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                                       ),
                                     ),
                                     Text(
-                                      p.sellerType,
+                                      '$sellerListings listing${sellerListings == 1 ? '' : 's'} · ${p.sellerType}',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textMuted,
@@ -576,15 +556,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           ),
                         ),
                         const SizedBox(height: 13),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                          ),
-                          onPressed: _openChat,
-                          child: const Text('Chat with Seller'),
-                        ),
-                        const SizedBox(height: 9),
-                        OutlinedButton(
+                        OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(48),
                             side: const BorderSide(color: AppColors.border),
@@ -594,10 +566,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             foregroundColor: AppColors.textPrimary,
                           ),
                           onPressed: () => setState(() => _phoneShown = true),
-                          child: Text(
-                            _phoneShown
-                                ? p.phoneFull
-                                : '${p.phoneMasked} — Tap to reveal',
+                          icon: const Icon(Icons.call_outlined, size: 18),
+                          label: Text(
+                            _phoneShown ? p.phoneFull : "Reveal owner's number",
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -606,17 +577,18 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.whatsapp,
                           ),
-                          onPressed: () => _soon('Chat on WhatsApp'),
-                          child: const Text('Chat on WhatsApp'),
+                          onPressed: () => _soon('WhatsApp'),
+                          child: const Text('WhatsApp'),
                         ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Never share payment details before viewing in person.',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: AppColors.textMuted,
+                        const SizedBox(height: 9),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
                           ),
+                          onPressed: _openChat,
+                          child: const Text('Message in App'),
                         ),
+                        const SizedBox(height: 6),
                         TextButton(
                           onPressed: _showReportDialog,
                           child: const Text(
@@ -627,23 +599,55 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             ),
                           ),
                         ),
+                        const Text(
+                          'By contacting, you agree to our Safety Guidelines.',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  if (related.isNotEmpty) ...[
-                    _heading(
-                      p.isRent ? 'Related rentals' : 'Related properties',
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.mint,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    for (final r in related)
-                      PropertyCard(
-                        property: r,
-                        onTap: () => Navigator.of(context).pushReplacement(
-                          MaterialPageRoute<void>(
-                            builder: (_) => PropertyDetailScreen(property: r),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Stay safe while searching',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
                           ),
                         ),
-                      ),
-                  ],
+                        const SizedBox(height: 5),
+                        const Text(
+                          "Avoid making advance payments until you've visited the property and verified the owner's identity. For full guidance, see our Safety Guidelines.",
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: AppColors.textPrimary,
+                            height: 1.5,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  const InfoScreen(kind: InfoKind.safety),
+                            ),
+                          ),
+                          child: const Text('Read Safety Guidelines'),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

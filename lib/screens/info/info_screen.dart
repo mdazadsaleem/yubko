@@ -29,8 +29,10 @@ class InfoScreen extends StatelessWidget {
   };
 
   String? get _intro => switch (kind) {
+    InfoKind.faqs =>
+      'Everything you need to know about GharMark — posting, safety, rules, and our no-fee promise.',
     InfoKind.safety =>
-      'Always conduct direct due diligence before committing any funds to a transaction.',
+      '#1 Rule: Never pay in advance. Never send token money, advance rent, or "booking" fees before visiting the property and verifying ownership. GharMark never asks for payments on behalf of owners.',
     InfoKind.privacy =>
       'Our Privacy Commitment: We never sell or lease your telephone numbers or personal emails to commercial telemarketers. Information is collected solely to power your property search, connect you with verified sellers, and prevent marketplace fraud.',
     InfoKind.terms =>
@@ -85,23 +87,48 @@ class InfoScreen extends StatelessWidget {
     ],
     InfoKind.faqs => const [
       _Section(
-        'Is listing a property free?',
+        'Is GharMark 100% free to use?',
         body:
-            'Yes! GharMark provides free property listings for individual homeowners, tenants, and authorized real estate agents across Pakistan. You can upload photos, describe your property, set your price in PKR, and receive direct buyer inquiries without any upfront listing fees or mandatory commissions.',
+            'Yes! GharMark provides free property listings for individual homeowners, tenants, and authorized real estate agents across Pakistan. You can upload photos, describe your property, set your price in PKR, and receive direct buyer inquiries without any upfront listing fees or mandatory commissions. Revenue comes only from certified services and optional add-ons, never from priority placement.',
       ),
       _Section(
-        'Do I need an account to browse?',
+        'Can I browse properties without creating an account?',
         body:
-            'No. You can browse freely as a guest. Sign in only to save a listing, contact an owner, or post a property.',
+            'Yes. You can browse freely as a guest. Sign in only to save a listing, contact an owner, or post a property.',
       ),
       _Section(
-        'How do I contact a seller?',
+        'How do I contact a property owner?',
         body:
-            'Use the Chat button on the property page, reveal the phone number, or tap Chat on WhatsApp.',
+            "After signing in, use the Reveal owner's number button or WhatsApp on the listing page.",
       ),
       _Section(
-        'Are listings ranked by payment?',
-        body: 'No. There are no paid featured ads or ranking boosts.',
+        'How long does it take for my listing to go live?',
+        body:
+            'Standard listings go live immediately. Automated safety filters scan for spam, fraud and misinformation first, so a flagged listing may take a few hours for manual review.',
+      ),
+      _Section(
+        'Do you charge any fees to post a property?',
+        body: 'No. There are no posting or browsing fees.',
+      ),
+      _Section(
+        'What should I do before paying token money or rent?',
+        body:
+            'Never pay in advance. Physically verify the property and the ownership documents first, and contact support if you are unsure.',
+      ),
+      _Section(
+        "Can I post a listing if I don't own the property?",
+        body:
+            'Only with written authorization from the owner or legal possession of the property. Buyers should verify the authorisation.',
+      ),
+      _Section(
+        'How does GharMark verify listings?',
+        body:
+            'GharMark does not verify property ownership. Verified badges and OCR scans help screen fraudulent ads, but users must take responsibility and check documents themselves.',
+      ),
+      _Section(
+        'How do I report a scam or a fake listing?',
+        body:
+            'Use the Report this listing button on any property page. The support team reviews reports within 24 hours.',
       ),
     ],
     InfoKind.contact => const [
@@ -229,6 +256,21 @@ class InfoScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
         children: [
+          if (kind == InfoKind.safety ||
+              kind == InfoKind.privacy ||
+              kind == InfoKind.terms)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                kind == InfoKind.safety
+                    ? 'Last reviewed: October 2026'
+                    : 'Last updated: October 2026',
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
           if (_intro != null)
             Container(
               margin: const EdgeInsets.only(bottom: 11),

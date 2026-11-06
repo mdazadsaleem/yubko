@@ -222,15 +222,29 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '${results.length} properties found · Updated recently',
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textMuted,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _filters.isRent == null
+                    ? 'Properties across Pakistan'
+                    : _filters.isRent!
+                    ? 'Properties for rent across Pakistan'
+                    : 'Properties for sale across Pakistan',
+                style: const TextStyle(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
+              const SizedBox(height: 2),
+              Text(
+                '${results.length} results · Updated moments ago',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -257,6 +271,45 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
                           ),
                         ),
                       ),
+                    if (_filters.isRent == true) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        'RECOMMENDED PROPERTIES — OPTION TO BUY INSTEAD',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.emeraldDark,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        "Can't find a property to rent? Explore verified properties for sale across Pakistan and consider investing.",
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textMuted,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      for (final p in dummyProperties.where((e) => !e.isRent))
+                        PropertyCard(
+                          property: p,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => PropertyDetailScreen(property: p),
+                            ),
+                          ),
+                        ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: () =>
+                              setState(() => _filters.isRent = false),
+                          child: const Text('View all for buy'),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
         ),

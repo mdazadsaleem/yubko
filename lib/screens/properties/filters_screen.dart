@@ -72,22 +72,41 @@ class _FiltersScreenState extends State<FiltersScreen> {
     text: widget.initial.sizeValue?.toString() ?? '',
   );
 
+  // The website's exact price steps.
   static const _priceOptions = <int?>[
     null,
-    25000,
+    10000,
+    20000,
+    30000,
     50000,
     100000,
-    250000,
+    200000,
     500000,
     1000000,
     2500000,
     5000000,
     10000000,
-    25000000,
+    20000000,
     50000000,
     100000000,
-    200000000,
   ];
+
+  static const _priceLabels = <int, String>{
+    10000: '10,000 PKR',
+    20000: '20,000 PKR',
+    30000: '30,000 PKR',
+    50000: '50,000 PKR',
+    100000: '1 Lakh',
+    200000: '2 Lakh',
+    500000: '5 Lakh',
+    1000000: '1 Million',
+    2500000: '2.5 Million',
+    5000000: '5 Million',
+    10000000: '1 Crore',
+    20000000: '2 Crore',
+    50000000: '5 Crore',
+    100000000: '10+ Crore',
+  };
 
   @override
   void dispose() {
@@ -97,16 +116,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
   }
 
   String _priceLabel(int? value, {required bool isMin}) {
-    if (value == null) return isMin ? 'No min' : 'No max';
-    if (value >= 10000000) {
-      final crore = value / 10000000;
-      return 'PKR ${crore == crore.roundToDouble() ? crore.toInt() : crore} Crore';
-    }
-    if (value >= 100000) {
-      final lakh = value / 100000;
-      return 'PKR ${lakh == lakh.roundToDouble() ? lakh.toInt() : lakh} Lakh';
-    }
-    return 'PKR ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},')}';
+    if (value == null) return isMin ? 'Any Min' : 'Any Max';
+    return _priceLabels[value] ?? 'PKR $value';
   }
 
   Widget _heading(String text) => Padding(
@@ -341,7 +352,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
             const Padding(
               padding: EdgeInsets.only(top: 7),
               child: Text(
-                'Marla (Normal) = 272.25 sq ft • Marla (Lahori) = 225 sq ft',
+                'Marla (Normal) = 272.25 sq ft • Marla (Lahori) = 225 sq ft • Kanal = 4,500 sq ft',
                 style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
               ),
             ),

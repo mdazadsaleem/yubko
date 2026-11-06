@@ -29,6 +29,8 @@ class Property {
     required this.icon,
     required this.photoCount,
     this.amenities = const [],
+    this.addedDate = '4 November 2026',
+    this.views = 0,
   });
 
   final String id;
@@ -54,6 +56,8 @@ class Property {
   final IconData icon;
   final int photoCount;
   final List<String> amenities;
+  final String addedDate;
+  final int views;
 
   String get location => '$area, $city';
 }
@@ -72,6 +76,7 @@ const List<Property> dummyProperties = [
     beds: 4,
     baths: 3,
     postedLabel: '2 days ago',
+    views: 231,
     status: 'Ready to move',
     description:
         'Brand new double storey house with imported fittings, Spanish tiles, solid wood work and a peaceful street. Near to main boulevard, schools and market.',
@@ -83,6 +88,7 @@ const List<Property> dummyProperties = [
     phoneFull: '+92 300 1112233',
     icon: Icons.house_rounded,
     photoCount: 6,
+    views: 132,
     amenities: [
       'Parking',
       'Gas available',
@@ -103,6 +109,7 @@ const List<Property> dummyProperties = [
     beds: 2,
     baths: 2,
     postedLabel: '5 hours ago',
+    views: 87,
     status: 'Ready to move',
     description:
         'Furnished apartment in a secure building with lift, standby generator and underground parking. Ideal for small families and executives.',
@@ -114,12 +121,7 @@ const List<Property> dummyProperties = [
     phoneFull: '+92 321 4445566',
     icon: Icons.apartment_rounded,
     photoCount: 8,
-    amenities: [
-      'Elevator / Lift',
-      'Furnished',
-      'Security Staff / CCTV',
-      'Parking',
-    ],
+    amenities: ['Elevator/Lift', 'Furnished', 'Security Staff/CCTV', 'Parking'],
   ),
   Property(
     id: 'p3',
@@ -145,7 +147,7 @@ const List<Property> dummyProperties = [
     phoneFull: '+92 333 7778899',
     icon: Icons.villa_rounded,
     photoCount: 10,
-    amenities: ['Lawn / Garden', 'Servant quarter', 'Parking', 'Park facing'],
+    amenities: ['Lawn/Garden', 'Servant quarter', 'Parking', 'Park facing'],
   ),
   Property(
     id: 'p4',
@@ -171,6 +173,7 @@ const List<Property> dummyProperties = [
     phoneFull: '+92 302 2223344',
     icon: Icons.landscape_rounded,
     photoCount: 3,
+    views: 48,
     amenities: ['Possession Available', 'Boundary Wall', 'Main Boulevard'],
   ),
   Property(
@@ -250,8 +253,8 @@ const List<Property> dummyProperties = [
     icon: Icons.location_city_rounded,
     photoCount: 7,
     amenities: [
-      'Elevator / Lift',
-      'Security Staff / CCTV',
+      'Elevator/Lift',
+      'Security Staff/CCTV',
       'Parking',
       'Electricity Backup',
     ],
@@ -269,6 +272,7 @@ const List<Property> dummyProperties = [
     beds: 5,
     baths: 6,
     postedLabel: '1 week ago',
+    views: 142,
     status: 'Ready to move',
     description:
         'Architect-designed house near Margalla Hills with home theatre, basement and smart lighting throughout. A rare find in F-7.',
@@ -282,7 +286,7 @@ const List<Property> dummyProperties = [
     photoCount: 12,
     amenities: [
       'Central Air Conditioning',
-      'Lawn / Garden',
+      'Lawn/Garden',
       'Parking',
       'Fire Exit',
     ],
@@ -304,22 +308,22 @@ const List<PopularArea> dummyAreas = [
   PopularArea(
     city: 'Faisalabad',
     count: '4 properties',
-    areas: 'East Canal Road, Canal Road, Satiana Road',
+    areas: 'Faisalabad East · East Canal Road · Canal Road · Satiana Road',
   ),
   PopularArea(
     city: 'Karachi',
     count: '1 property',
-    areas: 'Gulberg Town, Gulshan-e-Iqbal, North Karachi',
+    areas: 'Gulberg Town · Karachi East · Gulshan-e-Iqbal · North Karachi',
   ),
   PopularArea(
     city: 'Islamabad',
     count: '1 property',
-    areas: 'F Sectors, F-6/1, F-7/1',
+    areas: 'Islamabad F Sectors · F-6/1 · Sector F-6 · F-7/1',
   ),
   PopularArea(
     city: 'Lahore',
-    count: '2 properties',
-    areas: 'DHA Defence, Gulberg, Askari',
+    count: '0 properties listed',
+    areas: 'DHA Defence · Lahore DHA & Cantt · Sarwar Colony · Askari 1',
   ),
 ];
 
@@ -337,6 +341,7 @@ class RoommateProfile {
     required this.purpose,
     required this.postedLabel,
     required this.initial,
+    this.views = 0,
   });
   final String name;
   final String title;
@@ -350,6 +355,7 @@ class RoommateProfile {
   final String purpose; // Need Room / Have Room
   final String postedLabel;
   final String initial;
+  final int views;
 }
 
 const List<RoommateProfile> dummyRoommates = [
@@ -365,6 +371,7 @@ const List<RoommateProfile> dummyRoommates = [
     gender: 'Male',
     purpose: 'Need Room',
     postedLabel: '2 days ago',
+    views: 231,
     initial: 'A',
   ),
   RoommateProfile(
@@ -379,6 +386,7 @@ const List<RoommateProfile> dummyRoommates = [
     gender: 'Female',
     purpose: 'Have Room',
     postedLabel: '5 hours ago',
+    views: 87,
     initial: 'Z',
   ),
   RoommateProfile(
@@ -393,6 +401,7 @@ const List<RoommateProfile> dummyRoommates = [
     gender: 'Male',
     purpose: 'Have Room',
     postedLabel: '1 week ago',
+    views: 142,
     initial: 'D',
   ),
 ];
@@ -517,10 +526,10 @@ const List<String> dummyAmenities = [
   'Gas available',
   'Servant quarter',
   'Corner property',
-  'Security Staff / CCTV',
-  'Elevator / Lift',
+  'Security Staff/CCTV',
+  'Elevator/Lift',
   'Furnished',
-  'Lawn / Garden',
+  'Lawn/Garden',
   'Park facing',
   'Main Boulevard',
   'Possession Available',

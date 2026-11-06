@@ -10,6 +10,7 @@ class _TopSearch {
     this.isRent,
     this.city,
     this.type,
+    this.society,
   });
 
   final String title;
@@ -17,64 +18,35 @@ class _TopSearch {
   final bool? isRent;
   final String? city;
   final String? type;
+  final String? society;
 }
 
 const _searches = [
   _TopSearch(
-    title: 'Houses for sale in Lahore',
-    subtitle: 'Family homes in DHA, Gulberg and Askari',
+    title: 'Houses For Sale in Karachi',
+    subtitle: 'Houses · Buy · Karachi',
     isRent: false,
+    city: 'Karachi',
+    type: 'House',
+  ),
+  _TopSearch(
+    title: 'Houses in Satellite Town',
+    subtitle: 'Houses · Satellite Town',
+    type: 'House',
+    society: 'Satellite Town',
+  ),
+  _TopSearch(
+    title: 'Houses In Lahore',
+    subtitle: 'Houses · Lahore',
     city: 'Lahore',
     type: 'House',
   ),
   _TopSearch(
-    title: 'Flats for rent in Karachi',
-    subtitle: 'Apartments and flats for monthly rent',
+    title: 'Flats For Rent In Lahore',
+    subtitle: 'Flats · Rent · Lahore',
     isRent: true,
-    city: 'Karachi',
-    type: 'Flat / Apartment',
-  ),
-  _TopSearch(
-    title: 'Residential plots in Lahore',
-    subtitle: 'Plots in DHA and developing societies',
-    isRent: false,
     city: 'Lahore',
-    type: 'Residential Plot',
-  ),
-  _TopSearch(
-    title: 'Hostels in Faisalabad',
-    subtitle: 'Rooms and bed spaces near universities',
-    isRent: true,
-    city: 'Faisalabad',
-    type: 'Room / Hostel',
-  ),
-  _TopSearch(
-    title: 'Houses for rent in Islamabad',
-    subtitle: 'Homes in F and G sectors',
-    isRent: true,
-    city: 'Islamabad',
-    type: 'House',
-  ),
-  _TopSearch(
-    title: 'Shops for rent in Faisalabad',
-    subtitle: 'Commercial spaces on busy roads',
-    isRent: true,
-    city: 'Faisalabad',
-    type: 'Shop',
-  ),
-  _TopSearch(
-    title: 'Apartments for sale in Karachi',
-    subtitle: 'Ready-to-move flats and apartments',
-    isRent: false,
-    city: 'Karachi',
     type: 'Flat / Apartment',
-  ),
-  _TopSearch(
-    title: 'Houses for sale in Faisalabad',
-    subtitle: 'Homes in Eden Gardens and Canal Road areas',
-    isRent: false,
-    city: 'Faisalabad',
-    type: 'House',
   ),
 ];
 
@@ -108,7 +80,7 @@ class TopSearchesScreen extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           const Text(
-            'The property searches people open most often across Pakistan.',
+            "The website's most-opened searches.",
             style: TextStyle(fontSize: 13, color: AppColors.textMuted),
           ),
           const SizedBox(height: 14),
@@ -147,6 +119,7 @@ class TopSearchesScreen extends StatelessWidget {
                       initialIsRent: search.isRent,
                       initialCity: search.city,
                       initialType: search.type,
+                      initialSociety: search.society,
                     ),
                   ),
                 ),

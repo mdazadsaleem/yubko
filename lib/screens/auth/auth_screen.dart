@@ -23,12 +23,26 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _whatsappController = TextEditingController();
+  final _bioController = TextEditingController();
 
   bool _obscurePassword = true;
-  bool _obscureConfirm = true;
   bool _keepSignedIn = true;
-  bool _agreeTerms = false;
+  String? _signupCity;
+
+  // The sign-up City dropdown on the website has only these cities.
+  static const _signupCities = [
+    'Lahore',
+    'Karachi',
+    'Islamabad',
+    'Rawalpindi',
+    'Peshawar',
+    'Multan',
+    'Faisalabad',
+    'Gujranwala',
+    'Sialkot',
+    'Quetta',
+  ];
 
   @override
   void dispose() {
@@ -36,7 +50,8 @@ class _AuthScreenState extends State<AuthScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _whatsappController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -83,16 +98,12 @@ class _AuthScreenState extends State<AuthScreen> {
         _showError('Password must be at least 8 characters.');
         return;
       }
-      if (_confirmPasswordController.text != password) {
-        _showError('Passwords do not match.');
-        return;
-      }
-      if (!_agreeTerms) {
-        _showError('Please agree to the Terms of Service and Privacy Policy.');
+      if (_signupCity == null) {
+        _showError('Please select your city.');
         return;
       }
     }
-    _enterApp(_isLogin ? 'Login' : 'Create Account');
+    _enterApp(_isLogin ? 'Log in' : 'Create account');
   }
 
   /// Design phase only: entering the app shows the design preview.
@@ -168,7 +179,7 @@ class _AuthScreenState extends State<AuthScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            _isLogin ? 'Welcome back' : 'Join GharMarkaz',
+            _isLogin ? 'Welcome back' : 'Create your account',
             style: const TextStyle(
               fontSize: 21,
               fontWeight: FontWeight.w800,
@@ -178,8 +189,8 @@ class _AuthScreenState extends State<AuthScreen> {
           const SizedBox(height: 5),
           Text(
             _isLogin
-                ? 'Sign in to manage listings, enquiries and saved homes.'
-                : 'Create your free account to post properties and save your favourites.',
+                ? 'Sign in to continue to GharMarkaz.'
+                : "Join Pakistan's transparent property marketplace.",
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.textMuted,
@@ -223,51 +234,34 @@ class _AuthScreenState extends State<AuthScreen> {
           _buildTabs(),
           const SizedBox(height: 18),
           if (!_isLogin) ...[
-            _label('Full Name'),
+            _label('Full name *'),
             TextField(
               controller: _nameController,
               keyboardType: TextInputType.name,
               decoration: const InputDecoration(
-                hintText: 'Your full name',
+                hintText: 'e.g. Muhammad Ali',
                 prefixIcon: Icon(Icons.person_outline),
               ),
             ),
             const SizedBox(height: 14),
           ],
-          _label('Email address'),
+          _label('Email address *'),
           TextField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              hintText: 'name@example.com',
-              prefixIcon: Icon(Icons.email_outlined),
+            decoration: InputDecoration(
+              hintText: _isLogin ? 'you@example.com' : 'ali@example.com',
+              prefixIcon: const Icon(Icons.email_outlined),
             ),
           ),
-          if (!_isLogin) ...[
-            const SizedBox(height: 14),
-            _label('Phone Number'),
-            TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: '3XX XXXXXXX',
-                prefixText: '+92 ',
-                prefixStyle: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-                prefixIcon: Icon(Icons.phone_outlined),
-              ),
-            ),
-          ],
           const SizedBox(height: 14),
-          _label('Password'),
+          _label('Password *'),
           TextField(
             controller: _passwordController,
             obscureText: _obscurePassword,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Enter your password',
+              hintText: '8+ characters',
               prefixIcon: const Icon(Icons.lock_outlined),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -281,25 +275,52 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
           if (!_isLogin) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
+            const Text(
+              'Letters and numbers',
+              style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 6),
             _buildPasswordStrength(),
             const SizedBox(height: 14),
-            _label('Confirm Password'),
+            _label('Mobile number *'),
             TextField(
-              controller: _confirmPasswordController,
-              obscureText: _obscureConfirm,
-              decoration: InputDecoration(
-                hintText: 'Re-enter your password',
-                prefixIcon: const Icon(Icons.lock_outlined),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirm
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                  ),
-                  onPressed: () =>
-                      setState(() => _obscureConfirm = !_obscureConfirm),
-                ),
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                hintText: '0300 1234567',
+                prefixIcon: Icon(Icons.phone_outlined),
+              ),
+            ),
+            const SizedBox(height: 14),
+            _label('City *'),
+            DropdownButtonFormField<String>(
+              initialValue: _signupCity,
+              hint: const Text('Select city…'),
+              items: [
+                for (final city in _signupCities)
+                  DropdownMenuItem(value: city, child: Text(city)),
+              ],
+              onChanged: (value) => setState(() => _signupCity = value),
+            ),
+            const SizedBox(height: 14),
+            _label('WhatsApp number (optional)'),
+            TextField(
+              controller: _whatsappController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                hintText: 'Only if different from mobile',
+                prefixIcon: Icon(Icons.chat_outlined),
+              ),
+            ),
+            const SizedBox(height: 14),
+            _label('Bio / dealer info (optional)'),
+            TextField(
+              controller: _bioController,
+              maxLength: 200,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Agency name or a short bio',
               ),
             ),
           ],
@@ -340,58 +361,16 @@ class _AuthScreenState extends State<AuthScreen> {
               ],
             )
           else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: _agreeTerms,
-                    onChanged: (v) => setState(() => _agreeTerms = v ?? false),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textPrimary,
-                        height: 1.4,
-                      ),
-                      children: [
-                        TextSpan(text: 'I agree to the '),
-                        TextSpan(
-                          text: 'Terms of Service',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        TextSpan(text: ' and '),
-                        TextSpan(
-                          text: 'Privacy Policy',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox.shrink(),
           const SizedBox(height: 18),
           ElevatedButton(
             onPressed: _onPrimaryPressed,
-            child: Text(_isLogin ? 'Login' : 'Create Account'),
+            child: Text(_isLogin ? 'Log in' : 'Create account'),
           ),
           const SizedBox(height: 14),
-          if (_isLogin)
+          if (!_isLogin)
             const Text(
-              'By signing in you agree to our Terms of Use and Privacy Policy.',
+              'By continuing, you agree to our Terms of Use and Privacy Policy.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
             ),
@@ -409,7 +388,7 @@ class _AuthScreenState extends State<AuthScreen> {
               GestureDetector(
                 onTap: () => setState(() => _isLogin = !_isLogin),
                 child: Text(
-                  _isLogin ? 'Create a free account' : 'Sign in',
+                  _isLogin ? 'Create an account' : 'Sign in',
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,

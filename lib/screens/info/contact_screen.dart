@@ -162,11 +162,20 @@ class _ContactScreenState extends State<ContactScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const Text(
+              "Have a question, feedback, or need help with safety? Reach out — we're happy to help.",
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textMuted,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 14),
             _contactCard(
               icon: Icons.call_outlined,
               title: 'Helpline',
               value: '+92 51 889 4427',
-              note: 'Call us for listing and account help.',
+              note: 'Mon–Sat, 9 AM – 6 PM (PKT).',
               actions: [
                 Expanded(
                   child: ElevatedButton.icon(
@@ -197,6 +206,14 @@ class _ContactScreenState extends State<ContactScreen> {
                   child: const Text('Have a general question? View FAQs'),
                 ),
               ],
+            ),
+            const SizedBox(height: 11),
+            _contactCard(
+              icon: Icons.location_on_outlined,
+              title: 'Location',
+              value: 'F-7 Markaz, Islamabad, Pakistan',
+              note: 'Our head office (by appointment).',
+              actions: const [],
             ),
             const SizedBox(height: 18),
             const Text(
@@ -245,7 +262,12 @@ class _ContactScreenState extends State<ContactScreen> {
                 hintText: 'Write your message…',
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            const Text(
+              'We respect your privacy. Your details are used only to respond to your message and are never shared.',
+              style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 14),
             ElevatedButton(onPressed: _send, child: const Text('Send Message')),
           ],
         ),

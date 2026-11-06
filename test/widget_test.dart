@@ -25,16 +25,19 @@ void main() {
     expect(find.text('Continue as guest'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
     expect(find.text('Continue with Facebook'), findsOneWidget);
-    expect(find.text('Create a free account'), findsOneWidget);
+    expect(find.text('Create an account'), findsOneWidget);
 
     // Switching to Sign Up shows the registration form.
     await tester.tap(find.text('Sign Up'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Join GharMarkaz'), findsOneWidget);
-    expect(find.text('Full Name'), findsOneWidget);
-    expect(find.text('Phone Number'), findsOneWidget);
-    expect(find.text('Create Account'), findsOneWidget);
+    expect(find.text('Create your account'), findsOneWidget);
+    expect(find.text('Full name *'), findsOneWidget);
+    expect(find.text('Mobile number *'), findsOneWidget);
+    expect(find.text('City *'), findsOneWidget);
+    expect(find.text('WhatsApp number (optional)'), findsOneWidget);
+    expect(find.text('Bio / dealer info (optional)'), findsOneWidget);
+    expect(find.text('Create account'), findsOneWidget);
   });
 
   testWidgets('Guest from dashboard opens the app home', (
@@ -95,7 +98,7 @@ void main() {
     expect(find.text('Non-smoker only'), findsOneWidget);
     expect(find.text('Sort by'), findsOneWidget);
 
-    await tester.tap(find.text('Post Roommate Ad'));
+    await tester.tap(find.text('+ Post Roommate Ad'));
     await tester.pumpAndSettle();
 
     expect(find.text('Your Name'), findsOneWidget);
