@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../services/auth_service.dart';
+import '../../services/session_store.dart';
 import '../../theme/app_theme.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../home/home_screen.dart';
 
 /// Splash screen — website green with the GharMarkaz logo.
-/// Opens the dashboard after a short pause (design only).
+/// Restores a saved login via GET /me; otherwise opens the dashboard.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -15,23 +18,33 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
-
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 1600), () {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const DashboardScreen()),
-      );
-    });
+    _start();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  /// Restores a saved login (if any) and verifies it with GET /me.
+  /// A valid session goes straight to the app (Home tab); everyone
+  /// else sees the dashboard, as designed.
+  Future<void> _start() async {
+    var loggedIn = false;
+    try {
+      if (await SessionStore.restore()) {
+        final user = await AuthService.me().timeout(const Duration(seconds: 6));
+        await SessionStore.updateUser(user);
+        loggedIn = true;
+      }
+    } catch (_) {
+      await SessionStore.clear();
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 1400));
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => loggedIn ? const MainShell() : const DashboardScreen(),
+      ),
+    );
   }
 
   @override

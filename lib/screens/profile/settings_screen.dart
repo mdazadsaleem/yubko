@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../services/auth_service.dart';
+import '../../services/session_store.dart';
 import '../../theme/app_theme.dart';
 
-/// Settings — edit profile and notification preferences.
-/// Design only; values stay on this screen until Phase 2 APIs.
+/// Settings — edit profile (Auth API: PUT /profile) and
+/// notification preferences (local only). Email is shown
+/// read-only: the API has no email-change endpoint.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -12,19 +15,55 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _nameController = TextEditingController(text: 'Marwa');
-  final _emailController = TextEditingController(text: 'marwa@example.com');
-  final _phoneController = TextEditingController(text: '300 1112233');
-  String _accountType = 'Property Owner';
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _whatsappController = TextEditingController();
+  final _bioController = TextEditingController();
+  String? _city;
   bool _messageNotifications = true;
   bool _savedAlerts = true;
   bool _newListingAlerts = false;
+  bool _busy = false;
+
+  static const _cities = [
+    'Lahore',
+    'Karachi',
+    'Islamabad',
+    'Rawalpindi',
+    'Peshawar',
+    'Multan',
+    'Faisalabad',
+    'Gujranwala',
+    'Sialkot',
+    'Quetta',
+  ];
+
+  bool get _loggedIn => SessionStore.isLoggedIn;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = SessionStore.currentUser.value;
+    if (user != null) {
+      _nameController.text = user.fullName;
+      _emailController.text = user.email;
+      _phoneController.text = user.phone ?? '';
+      _whatsappController.text = user.whatsapp ?? '';
+      _bioController.text = user.bio ?? '';
+      if (user.city != null && _cities.contains(user.city)) {
+        _city = user.city;
+      }
+    }
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _whatsappController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -36,13 +75,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ),
   );
 
-  void _saved() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: AppColors.primary,
-        content: Text('Settings updated in the design preview.'),
-      ),
-    );
+  String _normalizePhone(String raw) {
+    var digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.startsWith('92') && digits.length == 12) {
+      digits = '0${digits.substring(2)}';
+    }
+    if (digits.length == 10 && digits.startsWith('3')) {
+      digits = '0$digits';
+    }
+    return digits;
+  }
+
+  Future<void> _save() async {
+    if (!_loggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text('Please sign in to edit your profile.'),
+        ),
+      );
+      return;
+    }
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.error,
+          content: Text('Please enter your full name.'),
+        ),
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final updated = await AuthService.updateProfile(
+        fullName: _nameController.text.trim(),
+        phone: _normalizePhone(_phoneController.text),
+        whatsapp: _whatsappController.text.trim().isEmpty
+            ? null
+            : _normalizePhone(_whatsappController.text),
+        city: _city,
+        bio: _bioController.text.trim(),
+      );
+      await SessionStore.updateUser(updated);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.primary,
+          content: Text('Profile updated successfully.'),
+        ),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(backgroundColor: AppColors.error, content: Text(e.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -75,31 +164,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _label('Email Address'),
             TextField(
               controller: _emailController,
+              enabled: false,
               keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                helperText: 'Email cannot be changed',
+              ),
             ),
             _label('Phone Number'),
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(prefixText: '+92 '),
+              decoration: const InputDecoration(hintText: '0300 1234567'),
             ),
-            _label('Account Type'),
+            _label('WhatsApp Number'),
+            TextField(
+              controller: _whatsappController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(hintText: '0300 1234567'),
+            ),
+            _label('City'),
             DropdownButtonFormField<String>(
-              initialValue: _accountType,
+              initialValue: _city,
+              hint: const Text('Select your city'),
               items: const [
+                DropdownMenuItem(value: 'Lahore', child: Text('Lahore')),
+                DropdownMenuItem(value: 'Karachi', child: Text('Karachi')),
+                DropdownMenuItem(value: 'Islamabad', child: Text('Islamabad')),
                 DropdownMenuItem(
-                  value: 'Property Owner',
-                  child: Text('Property Owner'),
+                  value: 'Rawalpindi',
+                  child: Text('Rawalpindi'),
                 ),
-                DropdownMenuItem(value: 'Agent', child: Text('Agent')),
+                DropdownMenuItem(value: 'Peshawar', child: Text('Peshawar')),
+                DropdownMenuItem(value: 'Multan', child: Text('Multan')),
                 DropdownMenuItem(
-                  value: 'Builder / Developer',
-                  child: Text('Builder / Developer'),
+                  value: 'Faisalabad',
+                  child: Text('Faisalabad'),
                 ),
+                DropdownMenuItem(
+                  value: 'Gujranwala',
+                  child: Text('Gujranwala'),
+                ),
+                DropdownMenuItem(value: 'Sialkot', child: Text('Sialkot')),
+                DropdownMenuItem(value: 'Quetta', child: Text('Quetta')),
               ],
-              onChanged: (value) =>
-                  setState(() => _accountType = value ?? _accountType),
+              onChanged: (value) => setState(() => _city = value),
             ),
+            _label('Bio / Dealer Info'),
+            TextField(
+              controller: _bioController,
+              maxLength: 200,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'A short intro about you (optional)',
+              ),
+            ),
+            if (!_loggedIn)
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.mint,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'You are browsing as a guest. Sign in to edit and save your profile.',
+                  style: TextStyle(fontSize: 12.5, color: AppColors.primary),
+                ),
+              ),
             const SizedBox(height: 22),
             const Text(
               'Notifications',
@@ -132,8 +263,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 18),
             ElevatedButton(
-              onPressed: _saved,
-              child: const Text('Save Settings'),
+              onPressed: _busy ? null : _save,
+              child: Text(_busy ? 'Saving…' : 'Save Settings'),
             ),
             const SizedBox(height: 12),
             OutlinedButton(
@@ -157,7 +288,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                     content: const Text(
-                      'This is only a design preview. Account deletion will be confirmed through the API in Phase 2.',
+                      'Account deletion is not available in the app yet. Please contact us and we will delete your account for you.',
                     ),
                     actions: [
                       TextButton(
