@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/dummy_data.dart';
+import '../../data/saved_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../chat/chats_screen.dart';
@@ -19,8 +20,8 @@ class PropertyDetailScreen extends StatefulWidget {
 }
 
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
-  bool _saved = false;
   bool _phoneShown = false;
+  int _photoIndex = 0;
 
   Property get p => widget.property;
 
@@ -76,6 +77,153 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     ),
   );
 
+  void _openChat() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            ChatThreadScreen(sellerName: p.sellerName, propertyTitle: p.title),
+      ),
+    );
+  }
+
+  void _showPhoneDialog() {
+    setState(() => _phoneShown = true);
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Seller phone number',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: Text(
+          '${p.sellerName}\n${p.phoneFull}\n\nDesign only — calling starts after API integration.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportDialog() {
+    var reason = 'Incorrect information';
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Report this listing',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final item in [
+                'Incorrect information',
+                'Property already sold or rented',
+                'Scam or suspicious behaviour',
+                'Duplicate listing',
+                'Other',
+              ])
+                RadioListTile<String>(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(item, style: const TextStyle(fontSize: 13.5)),
+                  value: item,
+                  groupValue: reason,
+                  onChanged: (value) =>
+                      setDialogState(() => reason = value ?? reason),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(0, 42),
+                backgroundColor: AppColors.error,
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _soon('Report submitted ($reason)');
+              },
+              child: const Text('Submit report'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _bottomBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(46),
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    foregroundColor: AppColors.primary,
+                  ),
+                  onPressed: _showPhoneDialog,
+                  icon: const Icon(Icons.call_outlined, size: 19),
+                  label: const Text('Call'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(46),
+                    backgroundColor: AppColors.primary,
+                  ),
+                  onPressed: _openChat,
+                  icon: const Icon(Icons.chat_bubble_outline, size: 19),
+                  label: const Text('Chat'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: AppColors.whatsapp,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  onPressed: () => _soon('Chat on WhatsApp'),
+                  icon: const Icon(Icons.chat, color: Colors.white, size: 21),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final related = dummyProperties
@@ -100,15 +248,23 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             icon: const Icon(Icons.share_outlined),
             onPressed: () => _soon('Share'),
           ),
-          IconButton(
-            icon: Icon(
-              _saved ? Icons.favorite : Icons.favorite_border,
-              color: _saved ? Colors.red : AppColors.textPrimary,
+          ValueListenableBuilder<Set<String>>(
+            valueListenable: SavedStore.ids,
+            builder: (context, savedIds, _) => IconButton(
+              icon: Icon(
+                savedIds.contains(p.id)
+                    ? Icons.favorite
+                    : Icons.favorite_border,
+                color: savedIds.contains(p.id)
+                    ? Colors.red
+                    : AppColors.textPrimary,
+              ),
+              onPressed: () => SavedStore.toggle(p.id),
             ),
-            onPressed: () => setState(() => _saved = !_saved),
           ),
         ],
       ),
+      bottomNavigationBar: _bottomBar(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +272,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             // Gallery (design placeholder)
             Stack(
               children: [
-                PropertyPhoto(property: p, height: 230),
+                SizedBox(
+                  height: 230,
+                  child: PageView.builder(
+                    itemCount: p.photoCount,
+                    onPageChanged: (index) =>
+                        setState(() => _photoIndex = index),
+                    itemBuilder: (_, _) =>
+                        PropertyPhoto(property: p, height: 230),
+                  ),
+                ),
                 Positioned(
                   bottom: 10,
                   right: 12,
@@ -130,7 +295,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
-                      '${p.photoCount} photos',
+                      '${_photoIndex + 1} / ${p.photoCount}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -319,7 +484,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        'ADDRESS: ${p.location}',
+                        'Approximate location: ${p.location}',
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
@@ -415,14 +580,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                           ),
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => ChatThreadScreen(
-                                sellerName: p.sellerName,
-                                propertyTitle: p.title,
-                              ),
-                            ),
-                          ),
+                          onPressed: _openChat,
                           child: const Text('Chat with Seller'),
                         ),
                         const SizedBox(height: 9),
@@ -460,7 +618,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           ),
                         ),
                         TextButton(
-                          onPressed: () => _soon('Report this listing'),
+                          onPressed: _showReportDialog,
                           child: const Text(
                             'Report this listing',
                             style: TextStyle(
@@ -473,7 +631,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ),
                   if (related.isNotEmpty) ...[
-                    _heading('Related in ${p.city}'),
+                    _heading(
+                      p.isRent ? 'Related rentals' : 'Related properties',
+                    ),
                     for (final r in related)
                       PropertyCard(
                         property: r,

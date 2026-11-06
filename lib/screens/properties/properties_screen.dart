@@ -17,12 +17,18 @@ class PropertiesScreen extends StatefulWidget {
     this.initialIsRent,
     this.initialCity,
     this.initialType,
+    this.initialSociety,
+    this.initialSizeValue,
+    this.initialUnit,
   });
 
   final bool isTab;
   final bool? initialIsRent;
   final String? initialCity;
   final String? initialType;
+  final String? initialSociety;
+  final double? initialSizeValue;
+  final String? initialUnit;
 
   @override
   State<PropertiesScreen> createState() => _PropertiesScreenState();
@@ -32,17 +38,46 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   late PropertyFilters _filters = PropertyFilters(
     isRent: widget.initialIsRent,
     city: widget.initialCity,
+    society: widget.initialSociety,
     types: widget.initialType == null ? {} : {widget.initialType!},
+    sizeValue: widget.initialSizeValue,
+    unit: widget.initialUnit,
   );
   PropertySort _sort = PropertySort.newest;
-  final Set<String> _savedIds = {};
 
   List<Property> get _results {
     var list = dummyProperties.where((p) {
       if (_filters.isRent != null && p.isRent != _filters.isRent) return false;
       if (_filters.city != null && p.city != _filters.city) return false;
-      if (_filters.types.isNotEmpty && !_filters.types.contains(p.type))
+      if (_filters.society != null &&
+          !p.area.toLowerCase().contains(_filters.society!.toLowerCase())) {
         return false;
+      }
+      if (_filters.types.isNotEmpty && !_filters.types.contains(p.type)) {
+        return false;
+      }
+      if (_filters.minPrice != null && p.priceValue < _filters.minPrice!) {
+        return false;
+      }
+      if (_filters.sizeValue != null || _filters.unit != null) {
+        if (_filters.unit != null &&
+            !p.sizeLabel.toLowerCase().contains(_filters.unit!.toLowerCase())) {
+          return false;
+        }
+        if (_filters.sizeValue != null) {
+          final match = RegExp(
+            r'[0-9]+(?:\.[0-9]+)?',
+          ).firstMatch(p.sizeLabel.replaceAll(',', ''));
+          final propertySize = match == null
+              ? null
+              : double.tryParse(match.group(0)!);
+          if (propertySize != _filters.sizeValue) return false;
+        }
+      }
+      if (_filters.amenities.isNotEmpty &&
+          !p.amenities.toSet().containsAll(_filters.amenities)) {
+        return false;
+      }
       if (_filters.bedrooms != null) {
         if (_filters.bedrooms == 5) {
           if (p.beds < 5) return false;
@@ -136,12 +171,61 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
             ],
           ),
         ),
+        if (_filters.isActive)
+          Container(
+            width: double.infinity,
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: [
+                if (_filters.isRent != null)
+                  Chip(
+                    label: Text(_filters.isRent! ? 'Rent' : 'Buy'),
+                    onDeleted: () => setState(() => _filters.isRent = null),
+                  ),
+                if (_filters.city != null)
+                  Chip(
+                    label: Text(_filters.city!),
+                    onDeleted: () => setState(() => _filters.city = null),
+                  ),
+                if (_filters.society != null)
+                  Chip(
+                    label: Text(_filters.society!),
+                    onDeleted: () => setState(() => _filters.society = null),
+                  ),
+                for (final type in _filters.types)
+                  Chip(
+                    label: Text(type),
+                    onDeleted: () =>
+                        setState(() => _filters.types.remove(type)),
+                  ),
+                if (_filters.unit != null)
+                  Chip(
+                    label: Text(
+                      '${_filters.sizeValue?.toString() ?? ''} ${_filters.unit!}'
+                          .trim(),
+                    ),
+                    onDeleted: () => setState(() {
+                      _filters.unit = null;
+                      _filters.sizeValue = null;
+                    }),
+                  ),
+                if (_filters.amenities.isNotEmpty)
+                  Chip(
+                    label: Text('${_filters.amenities.length} amenities'),
+                    onDeleted: () => setState(() => _filters.amenities = {}),
+                  ),
+              ],
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              '${results.length} results · Updated moments ago',
+              '${results.length} properties found · Updated recently',
               style: const TextStyle(
                 fontSize: 12.5,
                 color: AppColors.textMuted,
@@ -167,14 +251,6 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
                     for (final p in results)
                       PropertyCard(
                         property: p,
-                        saved: _savedIds.contains(p.id),
-                        onSaveTap: () => setState(() {
-                          if (_savedIds.contains(p.id)) {
-                            _savedIds.remove(p.id);
-                          } else {
-                            _savedIds.add(p.id);
-                          }
-                        }),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) => PropertyDetailScreen(property: p),

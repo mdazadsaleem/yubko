@@ -3,37 +3,50 @@ import 'package:flutter/material.dart';
 import '../../data/dummy_data.dart';
 import '../../theme/app_theme.dart';
 
-/// Filter values returned by the Filters screen (design only —
-/// the same filter set as the website's /properties panel).
+/// Filter values returned by the Filters screen.
+/// This is the website's /properties filter set: Purpose, Location
+/// (city + society/area), Price Range, Property Type, Property Size
+/// & Unit, Bedrooms and Amenities. There is no Bathrooms filter on
+/// the website.
 class PropertyFilters {
   PropertyFilters({
     this.isRent,
     this.city,
+    this.society,
     this.types = const {},
     this.bedrooms,
+    this.minPrice,
     this.maxPrice,
+    this.sizeValue,
     this.unit,
+    this.amenities = const {},
   });
 
   bool? isRent; // null = any
   String? city;
+  String? society;
   Set<String> types;
   int? bedrooms; // null = any, 5 = 5+
+  int? minPrice; // PKR
   int? maxPrice; // PKR
+  double? sizeValue;
   String? unit;
+  Set<String> amenities;
 
   bool get isActive =>
       isRent != null ||
       city != null ||
+      (society?.isNotEmpty ?? false) ||
       types.isNotEmpty ||
       bedrooms != null ||
+      minPrice != null ||
       maxPrice != null ||
-      unit != null;
+      sizeValue != null ||
+      unit != null ||
+      amenities.isNotEmpty;
 }
 
-/// Filters screen — the website's filter panel as a full screen:
-/// Purpose, Location, Price, Property Type, Size & Units,
-/// Bedrooms, Amenities.
+/// Filters screen — the website's filter panel as a full screen.
 class FiltersScreen extends StatefulWidget {
   const FiltersScreen({super.key, required this.initial});
 
@@ -48,28 +61,52 @@ class _FiltersScreenState extends State<FiltersScreen> {
   late String? _city = widget.initial.city;
   late Set<String> _types = {...widget.initial.types};
   late int? _bedrooms = widget.initial.bedrooms;
+  late int? _minPrice = widget.initial.minPrice;
   late int? _maxPrice = widget.initial.maxPrice;
   late String? _unit = widget.initial.unit;
-  final Set<String> _amenities = {};
+  late Set<String> _amenities = {...widget.initial.amenities};
+  late final _societyController = TextEditingController(
+    text: widget.initial.society ?? '',
+  );
+  late final _sizeController = TextEditingController(
+    text: widget.initial.sizeValue?.toString() ?? '',
+  );
 
   static const _priceOptions = <int?>[
     null,
+    25000,
     50000,
     100000,
+    250000,
     500000,
     1000000,
+    2500000,
     5000000,
     10000000,
     25000000,
     50000000,
     100000000,
+    200000000,
   ];
 
-  String _priceLabel(int? v) {
-    if (v == null) return 'No max';
-    if (v >= 10000000) return 'PKR ${v ~/ 10000000} Crore';
-    if (v >= 100000) return 'PKR ${v ~/ 100000} Lakh';
-    return 'PKR $v';
+  @override
+  void dispose() {
+    _societyController.dispose();
+    _sizeController.dispose();
+    super.dispose();
+  }
+
+  String _priceLabel(int? value, {required bool isMin}) {
+    if (value == null) return isMin ? 'No min' : 'No max';
+    if (value >= 10000000) {
+      final crore = value / 10000000;
+      return 'PKR ${crore == crore.roundToDouble() ? crore.toInt() : crore} Crore';
+    }
+    if (value >= 100000) {
+      final lakh = value / 100000;
+      return 'PKR ${lakh == lakh.roundToDouble() ? lakh.toInt() : lakh} Lakh';
+    }
+    return 'PKR ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},')}';
   }
 
   Widget _heading(String text) => Padding(
@@ -104,6 +141,44 @@ class _FiltersScreenState extends State<FiltersScreen> {
     );
   }
 
+  Widget _priceDropdown({
+    required String label,
+    required int? value,
+    required bool isMin,
+    required ValueChanged<int?> onChanged,
+  }) {
+    return DropdownButtonFormField<int>(
+      initialValue: value,
+      decoration: InputDecoration(labelText: label),
+      items: [
+        for (final price in _priceOptions)
+          DropdownMenuItem<int>(
+            value: price,
+            child: Text(
+              _priceLabel(price, isMin: isMin),
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+      ],
+      onChanged: onChanged,
+    );
+  }
+
+  void _reset() {
+    setState(() {
+      _isRent = null;
+      _city = null;
+      _types = {};
+      _bedrooms = null;
+      _minPrice = null;
+      _maxPrice = null;
+      _unit = null;
+      _amenities = {};
+      _societyController.clear();
+      _sizeController.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,15 +196,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => setState(() {
-              _isRent = null;
-              _city = null;
-              _types = {};
-              _bedrooms = null;
-              _maxPrice = null;
-              _unit = null;
-              _amenities.clear();
-            }),
+            onPressed: _reset,
             child: const Text(
               'Reset all',
               style: TextStyle(
@@ -169,6 +236,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
             _heading('Location'),
             DropdownButtonFormField<String>(
               initialValue: _city,
+              decoration: const InputDecoration(labelText: 'City'),
               hint: const Text('All Cities'),
               items: [
                 const DropdownMenuItem<String>(
@@ -180,17 +248,35 @@ class _FiltersScreenState extends State<FiltersScreen> {
               ],
               onChanged: (v) => setState(() => _city = v),
             ),
-            _heading('Price Range (PKR) — Max'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            const SizedBox(height: 10),
+            TextField(
+              controller: _societyController,
+              decoration: const InputDecoration(
+                labelText: 'Society / Area',
+                hintText: 'e.g. Eden Gardens, DHA, Gulberg',
+                prefixIcon: Icon(Icons.location_on_outlined),
+              ),
+            ),
+            _heading('Price Range (PKR)'),
+            Row(
               children: [
-                for (final p in _priceOptions)
-                  _pill(
-                    _priceLabel(p),
-                    _maxPrice == p,
-                    () => setState(() => _maxPrice = p),
+                Expanded(
+                  child: _priceDropdown(
+                    label: 'Minimum Price',
+                    value: _minPrice,
+                    isMin: true,
+                    onChanged: (v) => setState(() => _minPrice = v),
                   ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _priceDropdown(
+                    label: 'Maximum Price',
+                    value: _maxPrice,
+                    isMin: false,
+                    onChanged: (v) => setState(() => _maxPrice = v),
+                  ),
+                ),
               ],
             ),
             _heading('Property Type'),
@@ -212,19 +298,52 @@ class _FiltersScreenState extends State<FiltersScreen> {
                   ),
               ],
             ),
-            _heading('Size Unit'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            _heading('Property Size'),
+            Row(
               children: [
-                _pill(
-                  'Any unit',
-                  _unit == null,
-                  () => setState(() => _unit = null),
+                Expanded(
+                  child: TextField(
+                    controller: _sizeController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Size',
+                      hintText: 'e.g. 5, 10, 1250',
+                      prefixIcon: Icon(Icons.square_foot, size: 19),
+                    ),
+                  ),
                 ),
-                for (final u in dummySizeUnits)
-                  _pill(u, _unit == u, () => setState(() => _unit = u)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _unit,
+                    decoration: const InputDecoration(
+                      labelText: 'Area Size Unit',
+                    ),
+                    hint: const Text('Any unit'),
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('Any unit'),
+                      ),
+                      for (final u in dummySizeUnits)
+                        DropdownMenuItem(
+                          value: u,
+                          child: Text(u, style: const TextStyle(fontSize: 13)),
+                        ),
+                    ],
+                    onChanged: (v) => setState(() => _unit = v),
+                  ),
+                ),
               ],
+            ),
+            const Padding(
+              padding: EdgeInsets.only(top: 7),
+              child: Text(
+                'Marla (Normal) = 272.25 sq ft • Marla (Lahori) = 225 sq ft',
+                style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+              ),
             ),
             _heading('Bedrooms'),
             Wrap(
@@ -266,10 +385,16 @@ class _FiltersScreenState extends State<FiltersScreen> {
                   PropertyFilters(
                     isRent: _isRent,
                     city: _city,
+                    society: _societyController.text.trim().isEmpty
+                        ? null
+                        : _societyController.text.trim(),
                     types: _types,
                     bedrooms: _bedrooms,
+                    minPrice: _minPrice,
                     maxPrice: _maxPrice,
+                    sizeValue: double.tryParse(_sizeController.text.trim()),
                     unit: _unit,
+                    amenities: _amenities,
                   ),
                 );
               },

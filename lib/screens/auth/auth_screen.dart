@@ -49,17 +49,48 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(backgroundColor: AppColors.error, content: Text(message)),
+    );
+  }
+
   void _onPrimaryPressed() {
-    if (!_isLogin && !_agreeTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.error,
-          content: Text(
-            'Please agree to the Terms of Service and Privacy Policy.',
-          ),
-        ),
-      );
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      _showError('Please enter a valid email address.');
       return;
+    }
+    if (password.isEmpty) {
+      _showError('Please enter your password.');
+      return;
+    }
+    if (!_isLogin) {
+      if (_nameController.text.trim().isEmpty) {
+        _showError('Please enter your full name.');
+        return;
+      }
+      final phoneDigits = _phoneController.text.replaceAll(
+        RegExp(r'[^0-9]'),
+        '',
+      );
+      if (phoneDigits.length < 10) {
+        _showError('Please enter a valid phone number.');
+        return;
+      }
+      if (password.length < 8) {
+        _showError('Password must be at least 8 characters.');
+        return;
+      }
+      if (_confirmPasswordController.text != password) {
+        _showError('Passwords do not match.');
+        return;
+      }
+      if (!_agreeTerms) {
+        _showError('Please agree to the Terms of Service and Privacy Policy.');
+        return;
+      }
     }
     _enterApp(_isLogin ? 'Login' : 'Create Account');
   }

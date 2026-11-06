@@ -330,6 +330,8 @@ class RoommateProfile {
     required this.city,
     required this.area,
     required this.budgetLabel,
+    required this.budgetValue,
+    required this.nonSmoker,
     required this.roomType,
     required this.gender,
     required this.purpose,
@@ -341,6 +343,8 @@ class RoommateProfile {
   final String city;
   final String area;
   final String budgetLabel;
+  final int budgetValue;
+  final bool nonSmoker;
   final String roomType;
   final String gender;
   final String purpose; // Need Room / Have Room
@@ -355,6 +359,8 @@ const List<RoommateProfile> dummyRoommates = [
     city: 'Lahore',
     area: 'Johar Town',
     budgetLabel: 'PKR 18,000 / mo',
+    budgetValue: 18000,
+    nonSmoker: true,
     roomType: 'Shared Room (2 persons)',
     gender: 'Male',
     purpose: 'Need Room',
@@ -367,6 +373,8 @@ const List<RoommateProfile> dummyRoommates = [
     city: 'Islamabad',
     area: 'G-13',
     budgetLabel: 'PKR 28,000 / mo',
+    budgetValue: 28000,
+    nonSmoker: true,
     roomType: 'Private Room',
     gender: 'Female',
     purpose: 'Have Room',
@@ -379,6 +387,8 @@ const List<RoommateProfile> dummyRoommates = [
     city: 'Karachi',
     area: 'DHA Phase 5',
     budgetLabel: 'PKR 15,000 / mo',
+    budgetValue: 15000,
+    nonSmoker: false,
     roomType: 'Bed Space',
     gender: 'Male',
     purpose: 'Have Room',
@@ -444,6 +454,39 @@ const List<String> dummyCities = [
   'Gujranwala',
   'Hyderabad',
   'Bahawalpur',
+  'Sargodha',
+  'Sukkur',
+  'Larkana',
+  'Sheikhupura',
+  'Rahim Yar Khan',
+  'Jhang',
+  'Dera Ghazi Khan',
+  'Gujrat',
+  'Sahiwal',
+  'Wah Cantt',
+  'Kasur',
+  'Okara',
+  'Mingora',
+  'Chiniot',
+  'Kamoke',
+  'Hafizabad',
+  'Sadiqabad',
+  'Mirpur Khas',
+  'Khanewal',
+  'Kohat',
+  'Abbottabad',
+  'Muzaffargarh',
+  'Mandi Bahauddin',
+  'Dera Ismail Khan',
+  'Jacobabad',
+  'Murree',
+  'Mirpur (AJK)',
+  'Muzaffarabad',
+  'Skardu',
+  'Gilgit',
+  'Gwadar',
+  'Attock',
+  'Jhelum',
 ];
 
 const List<String> dummyPropertyTypes = [

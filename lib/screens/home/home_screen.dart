@@ -4,12 +4,14 @@ import '../../data/dummy_data.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../chat/chats_screen.dart';
+import '../info/contact_screen.dart';
 import '../info/info_screen.dart';
 import '../post/post_property_screen.dart';
 import '../profile/profile_screen.dart';
 import '../properties/properties_screen.dart';
 import '../properties/property_detail_screen.dart';
 import '../roommates/roommates_screen.dart';
+import 'top_searches_screen.dart';
 import '../saved/saved_screen.dart';
 
 /// Main shell after login / guest: bottom navigation with
@@ -100,6 +102,13 @@ class _HomeTabState extends State<HomeTab> {
   String? _city;
   String? _type;
   String? _unit;
+  final _sizeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _sizeController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pick(
     String title,
@@ -159,7 +168,186 @@ class _HomeTabState extends State<HomeTab> {
           initialIsRent: !_buy,
           initialCity: _city,
           initialType: _type,
+          initialSizeValue: double.tryParse(_sizeController.text.trim()),
+          initialUnit: _unit,
         ),
+      ),
+    );
+  }
+
+  Widget _sizeInput() {
+    return TextField(
+      controller: _sizeController,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: const InputDecoration(
+        hintText: 'Property size',
+        prefixIcon: Icon(Icons.square_foot, size: 19),
+      ),
+    );
+  }
+
+  void _openTopSearches() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const TopSearchesScreen()));
+  }
+
+  Widget _quickNav() {
+    final items = <(String, VoidCallback)>[
+      (
+        'Buy',
+        () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const PropertiesScreen(initialIsRent: false),
+          ),
+        ),
+      ),
+      (
+        'Rent',
+        () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const PropertiesScreen(initialIsRent: true),
+          ),
+        ),
+      ),
+      ('Top Searches', _openTopSearches),
+      (
+        'Roommates',
+        () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const RoommatesScreen()),
+        ),
+      ),
+    ];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final (label, onTap) in items)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ActionChip(
+                label: Text(label),
+                labelStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+                backgroundColor: AppColors.mint,
+                side: BorderSide.none,
+                onPressed: onTap,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _footerLink(String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12.5, color: AppColors.textMuted),
+        ),
+      ),
+    );
+  }
+
+  Widget _footer(BuildContext context) {
+    void open(Widget page) {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+    }
+
+    Widget column(String title, List<(String, VoidCallback)> links) {
+      return Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            for (final (label, onTap) in links) _footerLink(label, onTap),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.only(top: 18),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.home_work_rounded, color: AppColors.primary, size: 22),
+              SizedBox(width: 8),
+              Text(
+                'GharMarkaz',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          const Text(
+            "Pakistan's transparent real estate and rental marketplace. Browse as a guest, contact sellers directly, and post your listings for free.",
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AppColors.textMuted,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              column('Quick Links', [
+                (
+                  'Buy',
+                  () => open(const PropertiesScreen(initialIsRent: false)),
+                ),
+                (
+                  'Rent',
+                  () => open(const PropertiesScreen(initialIsRent: true)),
+                ),
+                ('Top Searches', _openTopSearches),
+                ('Roommates', () => open(const RoommatesScreen())),
+              ]),
+              column('Support', [
+                ('FAQs', () => open(const InfoScreen(kind: InfoKind.faqs))),
+                (
+                  'Safety Guidelines',
+                  () => open(const InfoScreen(kind: InfoKind.safety)),
+                ),
+                ('Contact Us', () => open(const ContactScreen())),
+                (
+                  'Privacy Policy',
+                  () => open(const InfoScreen(kind: InfoKind.privacy)),
+                ),
+                (
+                  'Terms of Service',
+                  () => open(const InfoScreen(kind: InfoKind.terms)),
+                ),
+              ]),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '© 2026 GharMarkaz. Developed for Pakistan Real Estate Market.',
+            style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '+92 51 889 4427  •  support@gharmark.pk',
+            style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
+          ),
+        ],
       ),
     );
   }
@@ -198,6 +386,7 @@ class _HomeTabState extends State<HomeTab> {
   Widget _sectionTitle(
     String eyebrow,
     String title, {
+    String? subtitle,
     String? actionLabel,
     VoidCallback? onAction,
   }) {
@@ -228,6 +417,17 @@ class _HomeTabState extends State<HomeTab> {
                     color: AppColors.textPrimary,
                   ),
                 ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -309,6 +509,8 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ],
               ),
+              const SizedBox(height: 10),
+              _quickNav(),
               const SizedBox(height: 16),
               // Hero + search card (website)
               const Text(
@@ -434,6 +636,8 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    _sizeInput(),
                     const SizedBox(height: 12),
                     ElevatedButton(
                       onPressed: _search,
@@ -458,12 +662,17 @@ class _HomeTabState extends State<HomeTab> {
                     _Stat(value: '42,800+', label: 'Live properties'),
                     _Stat(value: '18,500+', label: 'Homes to buy'),
                     _Stat(value: '9,200+', label: 'Homes to rent'),
-                    _Stat(value: '100% free', label: 'Every post'),
+                    _Stat(value: '100% free', label: 'Every property post'),
                   ],
                 ),
               ),
               // Categories
-              _sectionTitle('CATEGORIES', 'Browse by property type'),
+              _sectionTitle(
+                'CATEGORIES',
+                'Browse by property type',
+                subtitle:
+                    'Explore featured property categories across major cities with instant filtering',
+              ),
               Row(
                 children: [
                   _CategoryCard(
@@ -558,78 +767,86 @@ class _HomeTabState extends State<HomeTab> {
               _sectionTitle(
                 'RECENT LISTINGS',
                 'Newest properties',
+                subtitle:
+                    'Freshly added listings direct from owners and verified agents',
                 actionLabel: 'View all properties',
                 onAction: widget.onSearchTap,
               ),
               for (final p in dummyProperties.take(4))
                 PropertyCard(property: p, onTap: () => _openProperty(p)),
               // Popular areas
-              _sectionTitle('POPULAR AREAS', 'Popular cities and areas'),
+              _sectionTitle(
+                'POPULAR AREAS · LIVE TRENDS',
+                'Popular cities and areas',
+                subtitle:
+                    'Discover homes and high-demand investment locations most searched across Pakistan',
+              ),
               for (final a in dummyAreas)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 9),
-                  padding: const EdgeInsets.all(13),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.border),
+                InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => PropertiesScreen(initialCity: a.city),
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.location_on, color: AppColors.primary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              a.city,
-                              style: const TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w800,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 9),
+                    padding: const EdgeInsets.all(13),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.location_on, color: AppColors.primary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                a.city,
+                                style: const TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                            ),
-                            Text(
-                              a.areas,
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                color: AppColors.textMuted,
+                              Text(
+                                a.areas,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: AppColors.textMuted,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        a.count,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.emeraldDark,
+                        Text(
+                          a.count,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.emeraldDark,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 13,
+                          color: AppColors.textMuted,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               // Post property steps (website)
-              _sectionTitle('FOR PROPERTY OWNERS', 'Post a property for free'),
-              const _StepTile(
-                number: '01',
-                title: 'Add the essentials',
-                text:
-                    'Sale or Rent, property type, size, city and asking price.',
+              _sectionTitle(
+                'FOR PROPERTY OWNERS',
+                'Post a property for free in simple steps',
+                subtitle:
+                    'List your house, apartment, plot, or commercial space in minutes and connect with interested buyers directly without middleman fees.',
               ),
-              const _StepTile(
-                number: '02',
-                title: 'Upload clear photos',
-                text: 'Bedrooms, living areas and the front of the property.',
-              ),
-              const _StepTile(
-                number: '03',
-                title: 'Publish & connect directly',
-                text:
-                    'Go live immediately — chat with verified buyers and tenants.',
-              ),
-              const SizedBox(height: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -637,20 +854,46 @@ class _HomeTabState extends State<HomeTab> {
                 onPressed: widget.onPostTap,
                 child: const Text('Post Property Free'),
               ),
+              const SizedBox(height: 14),
+              const _StepTile(
+                number: '01',
+                title: 'Add the essentials',
+                text:
+                    'Choose Sale or Rent, select your property type, and enter key details like size, city, and asking price.',
+              ),
+              const _StepTile(
+                number: '02',
+                title: 'Upload clear photos',
+                text:
+                    'Showcase your property with bright photos of bedrooms, living areas, and facade to attract genuine inquiries.',
+              ),
+              const _StepTile(
+                number: '03',
+                title: 'Publish & connect directly',
+                text:
+                    'Go live immediately with 100% free listing. Chat and receive inquiries directly from verified buyers and tenants.',
+              ),
               // Safety (website)
-              _sectionTitle('SAFETY & TRUST', 'Verify before you commit'),
+              _sectionTitle(
+                'SAFETY & TRUST',
+                'Take your time. Verify before you commit.',
+                subtitle:
+                    'Our recommendations to help you make informed decisions when buying or renting:',
+              ),
               const _SafetyTile(
                 title: 'Visit in person',
                 text:
-                    'Confirm the address and condition before paying anything.',
+                    'Confirm the address, condition and access before transferring any money.',
               ),
               const _SafetyTile(
                 title: 'Check ownership documents',
-                text: 'Ask for title or allotment documents and verify them.',
+                text:
+                    'Ask for relevant title or allotment documents and verify them independently.',
               ),
               const _SafetyTile(
                 title: 'Keep conversations traceable',
-                text: 'Use written messages; be careful with urgency tricks.',
+                text:
+                    'Use written messages and be cautious if someone creates urgency or avoids questions.',
               ),
               Align(
                 alignment: Alignment.centerLeft,
@@ -663,13 +906,73 @@ class _HomeTabState extends State<HomeTab> {
                   child: const Text('Read full safety guide'),
                 ),
               ),
-              const SizedBox(height: 10),
-              const Center(
-                child: Text(
-                  '+92 51 889 4427  •  support@gharmark.pk',
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Have a property to sell or rent?',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Post your property for free and reach thousands of buyers and tenants across Pakistan.',
+                      style: TextStyle(
+                        color: AppColors.onGreenBody,
+                        fontSize: 13,
+                        height: 1.45,
+                      ),
+                    ),
+                    const SizedBox(height: 13),
+                    ElevatedButton(
+                      onPressed: widget.onPostTap,
+                      child: const Text('Post Property Free'),
+                    ),
+                    const SizedBox(height: 13),
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.call_outlined,
+                          color: Colors.white,
+                          size: 17,
+                        ),
+                        SizedBox(width: 7),
+                        Text(
+                          '+92 51 889 4427',
+                          style: TextStyle(color: Colors.white, fontSize: 12.5),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.email_outlined,
+                          color: Colors.white,
+                          size: 17,
+                        ),
+                        SizedBox(width: 7),
+                        Text(
+                          'support@gharmark.pk',
+                          style: TextStyle(color: Colors.white, fontSize: 12.5),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 18),
+              _footer(context),
             ],
           ),
         ),
@@ -813,6 +1116,15 @@ class _StepTile extends StatelessWidget {
                     fontSize: 12,
                     color: AppColors.textMuted,
                     height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Step $number of 03',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.emeraldDark,
                   ),
                 ),
               ],
