@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../services/auth_service.dart';
+import '../../controllers/saved_controller.dart';
 import '../../controllers/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../home/home_screen.dart';
@@ -106,6 +107,7 @@ class _OtpScreenState extends State<OtpScreen> {
           token: session.token,
           newUser: session.user,
         );
+        SavedController.to.syncFromServer();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -135,7 +135,7 @@ class InfoScreen extends StatelessWidget {
       _Section('Helpline', body: '+92 51 889 4427'),
       _Section(
         'Email',
-        body: 'support@gharmark.pk — replies typically within 2–4 hours.',
+        body: 'support@yubko.com — replies typically within 2–4 hours.',
       ),
     ],
     InfoKind.privacy => const [
@@ -354,7 +354,7 @@ class InfoScreen extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.only(top: 4),
             child: Text(
-              '+92 51 889 4427  •  support@gharmark.pk',
+              '+92 51 889 4427  •  support@yubko.com',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
             ),

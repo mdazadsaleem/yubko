@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Design-only dummy data, shaped exactly like the website's
-/// listings (same fields, same price style: Lakh/Crore for sale,
-/// "/ mo" for rent; sizes in Marla/Kanal/Sq. Ft.).
-/// This whole file is replaced by API data in Phase 2.
+/// The Property model used by every screen, plus the design-time
+/// sample listings. Live listings now come from the API
+/// (ApiListing.toProperty in api_listing.dart); the samples remain
+/// as labelled design samples (e.g. guest My Ads).
 class Property {
   const Property({
     required this.id,
@@ -31,6 +31,8 @@ class Property {
     this.amenities = const [],
     this.addedDate = '4 November 2026',
     this.views = 0,
+    this.imageUrls = const [],
+    this.sellerAvatarUrl,
   });
 
   final String id;
@@ -58,6 +60,11 @@ class Property {
   final List<String> amenities;
   final String addedDate;
   final int views;
+
+  /// Real photo URLs (API listings); empty for design samples,
+  /// which show the icon placeholder instead.
+  final List<String> imageUrls;
+  final String? sellerAvatarUrl;
 
   String get location => '$area, $city';
 }
@@ -312,7 +319,7 @@ const List<PopularArea> dummyAreas = [
   PopularArea(
     city: 'Karachi',
     count: '1 property',
-    areas: 'Gulberg Town · Karachi East · Gulshan-e-Iqbal · North Karachi',
+    areas: 'Clifton · DHA · Gulshan-e-Iqbal · PECHS',
   ),
   PopularArea(
     city: 'Islamabad',
@@ -322,7 +329,7 @@ const List<PopularArea> dummyAreas = [
   PopularArea(
     city: 'Lahore',
     count: '0 properties listed',
-    areas: 'DHA Defence · Lahore DHA & Cantt · Sarwar Colony · Askari 1',
+    areas: 'DHA · Gulberg · Bahria Town · Johar Town',
   ),
 ];
 

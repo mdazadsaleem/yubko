@@ -8,6 +8,9 @@ import '../../data/dummy_data.dart';
 import '../../services/auth_service.dart';
 import 'package:get/get.dart';
 
+import '../../controllers/catalog_controller.dart';
+import '../../controllers/saved_controller.dart';
+import '../../services/catalog_service.dart';
 import '../../controllers/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
@@ -119,7 +122,6 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final user = SessionController.to.user.value;
-      final myAds = [dummyProperties[0], dummyProperties[5]];
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -224,22 +226,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
-                'My Ads',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Listings you posted (design sample)',
-                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-              ),
-              const SizedBox(height: 10),
-              for (final ad in myAds)
-                PropertyCard(
-                  property: ad,
-                  onTap: () =>
-                      _open(context, PropertyDetailScreen(property: ad)),
-                ),
+              _MyAdsSection(user: user),
               const SizedBox(height: 8),
               const Text(
                 'Menu',
@@ -368,5 +355,99 @@ class ProfileScreen extends StatelessWidget {
         ),
       );
     });
+  }
+}
+
+/// My Ads — for signed-in users these are the real listings from
+/// GET /listings/mine; guests see the labelled design sample.
+class _MyAdsSection extends StatefulWidget {
+  const _MyAdsSection({required this.user});
+
+  final ApiUser? user;
+
+  @override
+  State<_MyAdsSection> createState() => _MyAdsSectionState();
+}
+
+class _MyAdsSectionState extends State<_MyAdsSection> {
+  List<Property> _ads = [];
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.user != null) _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final listings = await CatalogService.fetchMyListings();
+      if (!mounted) return;
+      final properties = listings.map((l) => l.toProperty()).toList();
+      CatalogController.to.register(properties);
+      setState(() {
+        _ads = properties;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  void _openAd(Property ad) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PropertyDetailScreen(property: ad),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loggedIn = widget.user != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'My Ads',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          loggedIn
+              ? 'Listings you posted'
+              : 'Listings you posted (design sample)',
+          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+        ),
+        const SizedBox(height: 10),
+        if (!loggedIn)
+          for (final ad in [dummyProperties[0], dummyProperties[5]])
+            PropertyCard(property: ad, onTap: () => _openAd(ad))
+        else if (_loading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_error != null)
+          const Text(
+            'Could not load your ads.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
+          )
+        else if (_ads.isEmpty)
+          const Text(
+            'You have not posted any property yet.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
+          )
+        else
+          for (final ad in _ads)
+            PropertyCard(property: ad, onTap: () => _openAd(ad)),
+      ],
+    );
   }
 }

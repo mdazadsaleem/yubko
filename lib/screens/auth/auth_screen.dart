@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../services/auth_service.dart';
+import '../../controllers/saved_controller.dart';
 import '../../controllers/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_top_bar.dart';
@@ -116,6 +117,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   void _goHome(String message) {
+    SavedController.to.syncFromServer();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(backgroundColor: AppColors.primary, content: Text(message)),
     );

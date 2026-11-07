@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/catalog_controller.dart';
+
 import '../../theme/app_theme.dart';
 import 'info_screen.dart';
 
@@ -15,6 +17,14 @@ class ContactScreen extends StatefulWidget {
 }
 
 class _ContactScreenState extends State<ContactScreen> {
+  @override
+  void initState() {
+    super.initState();
+    CatalogController.to.loadSettings().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   static const _topics = [
     'General Inquiry',
     'Listing Help / Verification',
@@ -143,6 +153,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = CatalogController.to.settings.value;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -174,7 +185,7 @@ class _ContactScreenState extends State<ContactScreen> {
             _contactCard(
               icon: Icons.call_outlined,
               title: 'Helpline',
-              value: '+92 51 889 4427',
+              value: settings?.helplinePhone ?? '+92 51 889 4427',
               note: 'Mon–Sat, 9 AM – 6 PM (PKT).',
               actions: [
                 Expanded(
@@ -194,7 +205,7 @@ class _ContactScreenState extends State<ContactScreen> {
             _contactCard(
               icon: Icons.email_outlined,
               title: 'Email',
-              value: 'support@gharmark.pk',
+              value: settings?.supportEmail ?? 'support@yubko.com',
               note: 'Replies typically within 2–4 hours.',
               actions: [
                 TextButton(

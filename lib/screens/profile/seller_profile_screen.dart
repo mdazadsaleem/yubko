@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/catalog_controller.dart';
+
 import '../../data/dummy_data.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
@@ -22,7 +24,8 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final p = widget.property;
-    final ads = dummyProperties
+    final ads = CatalogController.to
+        .knownProperties()
         .where((x) => x.sellerName == p.sellerName)
         .toList();
     return Scaffold(
