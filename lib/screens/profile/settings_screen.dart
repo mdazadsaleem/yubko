@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/auth_service.dart';
-import '../../services/session_store.dart';
+import '../../controllers/session_controller.dart';
 import '../../theme/app_theme.dart';
 
 /// Settings — edit profile (Auth API: PUT /profile) and
@@ -39,12 +39,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'Quetta',
   ];
 
-  bool get _loggedIn => SessionStore.isLoggedIn;
+  bool get _loggedIn => SessionController.to.isLoggedIn;
 
   @override
   void initState() {
     super.initState();
-    final user = SessionStore.currentUser.value;
+    final user = SessionController.to.user.value;
     if (user != null) {
       _nameController.text = user.fullName;
       _emailController.text = user.email;
@@ -116,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         city: _city,
         bio: _bioController.text.trim(),
       );
-      await SessionStore.updateUser(updated);
+      await SessionController.to.updateUser(updated);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

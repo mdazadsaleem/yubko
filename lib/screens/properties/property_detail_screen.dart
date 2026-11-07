@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../data/dummy_data.dart';
-import '../../data/saved_store.dart';
+import 'package:get/get.dart';
+
+import '../../controllers/saved_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../chat/chats_screen.dart';
@@ -220,20 +222,17 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             icon: const Icon(Icons.share_outlined),
             onPressed: () => _soon('Share'),
           ),
-          ValueListenableBuilder<Set<String>>(
-            valueListenable: SavedStore.ids,
-            builder: (context, savedIds, _) => IconButton(
+          Obx(() {
+            final savedIds = SavedController.to.ids;
+            final isSaved = savedIds.contains(p.id);
+            return IconButton(
               icon: Icon(
-                savedIds.contains(p.id)
-                    ? Icons.favorite
-                    : Icons.favorite_border,
-                color: savedIds.contains(p.id)
-                    ? Colors.red
-                    : AppColors.textPrimary,
+                isSaved ? Icons.favorite : Icons.favorite_border,
+                color: isSaved ? Colors.red : AppColors.textPrimary,
               ),
-              onPressed: () => SavedStore.toggle(p.id),
-            ),
-          ),
+              onPressed: () => SavedController.to.toggle(p.id),
+            );
+          }),
         ],
       ),
       body: SingleChildScrollView(

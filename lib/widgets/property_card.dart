@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../data/dummy_data.dart';
-import '../data/saved_store.dart';
+import 'package:get/get.dart';
+
+import '../controllers/saved_controller.dart';
 import '../theme/app_theme.dart';
 
 /// Photo placeholder for a listing (design only — real photos come
@@ -76,17 +78,15 @@ class PropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Set<String>>(
-      valueListenable: SavedStore.ids,
-      builder: (context, savedIds, _) {
-        final effectiveSaved = onSaveTap == null
-            ? savedIds.contains(property.id)
-            : saved;
-        final effectiveSaveTap =
-            onSaveTap ?? () => SavedStore.toggle(property.id);
-        return _buildCard(context, effectiveSaved, effectiveSaveTap);
-      },
-    );
+    return Obx(() {
+      final savedIds = SavedController.to.ids;
+      final effectiveSaved = onSaveTap == null
+          ? savedIds.contains(property.id)
+          : saved;
+      final effectiveSaveTap =
+          onSaveTap ?? () => SavedController.to.toggle(property.id);
+      return _buildCard(context, effectiveSaved, effectiveSaveTap);
+    });
   }
 
   Widget _buildCard(BuildContext context, bool saved, VoidCallback onSaveTap) {

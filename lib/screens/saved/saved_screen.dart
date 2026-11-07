@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import '../../controllers/saved_controller.dart';
 import '../../data/dummy_data.dart';
-import '../../data/saved_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../properties/property_detail_screen.dart';
 
 /// Saved / Wishlist — the website's heart-saved listings.
-/// The hearts are shared with Home, Search and Property Detail:
-/// saving or removing a property anywhere updates this list.
+/// The hearts are shared with Home, Search and Property Detail
+/// through the GetX SavedController: saving or removing a
+/// property anywhere updates this list.
 class SavedScreen extends StatelessWidget {
   const SavedScreen({super.key, this.isTab = false});
 
@@ -31,61 +33,59 @@ class SavedScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ValueListenableBuilder<Set<String>>(
-        valueListenable: SavedStore.ids,
-        builder: (context, savedIds, _) {
-          final saved = dummyProperties
-              .where((p) => savedIds.contains(p.id))
-              .toList();
-          if (saved.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.favorite_border,
-                      size: 52,
-                      color: AppColors.textMuted,
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'No saved homes yet.\nTap the heart on any property to save it here.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textMuted, height: 1.5),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  '${saved.length} saved properties',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+      body: Obx(() {
+        final savedIds = SavedController.to.ids;
+        final saved = dummyProperties
+            .where((p) => savedIds.contains(p.id))
+            .toList();
+        if (saved.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.favorite_border,
+                    size: 52,
+                    color: AppColors.textMuted,
                   ),
-                ),
-              ),
-              for (final p in saved)
-                PropertyCard(
-                  property: p,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => PropertyDetailScreen(property: p),
-                    ),
+                  SizedBox(height: 12),
+                  Text(
+                    'No saved homes yet.\nTap the heart on any property to save it here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textMuted, height: 1.5),
                   ),
-                ),
-            ],
+                ],
+              ),
+            ),
           );
-        },
-      ),
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                '${saved.length} saved properties',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            for (final p in saved)
+              PropertyCard(
+                property: p,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => PropertyDetailScreen(property: p),
+                  ),
+                ),
+              ),
+          ],
+        );
+      }),
     );
   }
 }
