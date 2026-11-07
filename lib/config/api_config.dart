@@ -15,6 +15,14 @@ class ApiConfig {
   /// Production auth API base URL.
   static const String authBaseUrl = 'https://server.yubko.com/api/auth';
 
+  /// Base URL for the data APIs (listings, roommates, locations,
+  /// wishlist, settings) — the same backend the website uses.
+  static const String apiBaseUrl = 'https://server.yubko.com/api';
+
+  /// The public website — host of the static pictures (logo, hero,
+  /// city and step photos) the app displays.
+  static const String siteBaseUrl = 'https://yubko.com';
+
   /// Request timeout for every API call.
   static const Duration timeout = Duration(seconds: 30);
 }
