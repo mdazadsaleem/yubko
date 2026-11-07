@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../data/dummy_data.dart';
 import 'package:get/get.dart';
 
+import '../../controllers/catalog_controller.dart';
 import '../../controllers/saved_controller.dart';
+import '../../services/catalog_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import '../chat/chats_screen.dart';
@@ -29,8 +31,57 @@ class PropertyDetailScreen extends StatefulWidget {
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   bool _phoneShown = false;
   int _photoIndex = 0;
+  String? _revealedPhone;
+  bool _revealing = false;
 
-  Property get p => widget.property;
+  late Property p = widget.property;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDetail();
+  }
+
+  /// API listings carry only summary data in lists — pull the
+  /// full detail (all photos, real view count, seller info)
+  /// from GET /listings/{id}. Design samples skip this.
+  Future<void> _loadDetail() async {
+    if (p.phoneFull.isNotEmpty) return;
+    try {
+      final listing = await CatalogService.fetchListing(p.id);
+      if (!mounted) return;
+      final full = listing.toProperty();
+      CatalogController.to.register([full]);
+      setState(() => p = full);
+    } catch (_) {
+      // Keep the list-level data if the detail fetch fails.
+    }
+  }
+
+  /// Reveals the owner's real number via the API
+  /// (POST /listings/{id}/contact-reveal), like the website.
+  Future<void> _revealPhone() async {
+    if (p.phoneFull.isNotEmpty) {
+      setState(() => _phoneShown = true);
+      return;
+    }
+    setState(() => _revealing = true);
+    try {
+      final contact = await CatalogService.revealContact(p.id);
+      if (!mounted) return;
+      setState(() {
+        _revealedPhone = contact.mobile;
+        _phoneShown = true;
+        _revealing = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _revealing = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
 
   void _soon(String action) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -71,7 +122,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 itemCount: p.photoCount,
                 controller: PageController(initialPage: _photoIndex),
                 onPageChanged: (i) => setDialogState(() => index = i),
-                itemBuilder: (_, _) => PropertyPhoto(property: p, height: 420),
+                itemBuilder: (_, i) => p.imageUrls.length > i
+                    ? Image.network(
+                        p.imageUrls[i],
+                        height: 420,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            PropertyPhoto(property: p, height: 420),
+                      )
+                    : PropertyPhoto(property: p, height: 420),
               ),
               Positioned(
                 top: 14,
@@ -193,7 +253,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sellerListings = dummyProperties
+    final sellerListings = CatalogController.to
+        .knownProperties()
         .where((x) => x.sellerName == p.sellerName)
         .length;
     final metaParts = <String>[
@@ -250,8 +311,16 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       itemCount: p.photoCount,
                       onPageChanged: (index) =>
                           setState(() => _photoIndex = index),
-                      itemBuilder: (_, _) =>
-                          PropertyPhoto(property: p, height: 230),
+                      itemBuilder: (_, i) => p.imageUrls.length > i
+                          ? Image.network(
+                              p.imageUrls[i],
+                              height: 230,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  PropertyPhoto(property: p, height: 230),
+                            )
+                          : PropertyPhoto(property: p, height: 230),
                     ),
                   ),
                   Positioned(
@@ -564,10 +633,14 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             ),
                             foregroundColor: AppColors.textPrimary,
                           ),
-                          onPressed: () => setState(() => _phoneShown = true),
+                          onPressed: _revealing ? null : _revealPhone,
                           icon: const Icon(Icons.call_outlined, size: 18),
                           label: Text(
-                            _phoneShown ? p.phoneFull : "Reveal owner's number",
+                            _revealing
+                                ? 'Loading…'
+                                : _phoneShown
+                                ? (_revealedPhone ?? p.phoneFull)
+                                : "Reveal owner's number",
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),

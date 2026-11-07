@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/catalog_controller.dart';
 import '../../data/dummy_data.dart';
+import '../../services/catalog_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
 import 'filters_screen.dart';
@@ -17,6 +19,7 @@ class PropertiesScreen extends StatefulWidget {
     this.initialIsRent,
     this.initialCity,
     this.initialType,
+    this.initialTypes,
     this.initialSociety,
     this.initialSizeValue,
     this.initialUnit,
@@ -26,6 +29,7 @@ class PropertiesScreen extends StatefulWidget {
   final bool? initialIsRent;
   final String? initialCity;
   final String? initialType;
+  final Set<String>? initialTypes;
   final String? initialSociety;
   final double? initialSizeValue;
   final String? initialUnit;
@@ -39,24 +43,88 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     isRent: widget.initialIsRent,
     city: widget.initialCity,
     society: widget.initialSociety,
-    types: widget.initialType == null ? {} : {widget.initialType!},
+    types:
+        widget.initialTypes ??
+        (widget.initialType == null ? {} : {widget.initialType!}),
     sizeValue: widget.initialSizeValue,
     unit: widget.initialUnit,
   );
   PropertySort _sort = PropertySort.newest;
 
-  List<Property> get _results {
-    var list = dummyProperties.where((p) {
-      if (_filters.isRent != null && p.isRent != _filters.isRent) return false;
-      if (_filters.city != null && p.city != _filters.city) return false;
+  /// Live listings from the API (GET /listings).
+  List<Property> _all = [];
+  List<Property> _buyAlso = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  String get _sortBy => switch (_sort) {
+    PropertySort.newest => 'newest',
+    PropertySort.priceLow => 'price_asc',
+    PropertySort.priceHigh => 'price_desc',
+  };
+
+  /// Loads listings from the API. The server applies purpose,
+  /// single type, city, price range, 5+ bedrooms and sorting;
+  /// the remaining filters are applied on the result below.
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final (listings, _) = await CatalogService.fetchListings(
+        intent: _filters.isRent == null
+            ? null
+            : (_filters.isRent! ? 'rent' : 'sell'),
+        propertyType: _filters.types.length == 1 ? _filters.types.first : null,
+        city: _filters.city,
+        minPrice: _filters.minPrice,
+        maxPrice: _filters.maxPrice,
+        minBedrooms: _filters.bedrooms == 5 ? 5 : null,
+        sortBy: _sortBy,
+      );
+      var buyAlso = const <Property>[];
+      if (_filters.isRent == true) {
+        final (sellListings, _) = await CatalogService.fetchListings(
+          intent: 'sell',
+        );
+        buyAlso = sellListings.map((l) => l.toProperty()).toList();
+      }
+      if (!mounted) return;
+      final properties = listings.map((l) => l.toProperty()).toList();
+      CatalogController.to.register(properties);
+      CatalogController.to.register(buyAlso);
+      setState(() {
+        _all = properties;
+        _buyAlso = buyAlso;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  /// Filters the server does not apply: society text, multiple
+  /// types, exact bedrooms, size and amenities.
+  List<Property> _results(List<Property> source) {
+    return source.where((p) {
       if (_filters.society != null &&
           !p.area.toLowerCase().contains(_filters.society!.toLowerCase())) {
         return false;
       }
-      if (_filters.types.isNotEmpty && !_filters.types.contains(p.type)) {
-        return false;
-      }
-      if (_filters.minPrice != null && p.priceValue < _filters.minPrice!) {
+      if (_filters.types.length != 1 &&
+          _filters.types.isNotEmpty &&
+          !_filters.types.contains(p.type)) {
         return false;
       }
       if (_filters.sizeValue != null || _filters.unit != null) {
@@ -78,35 +146,26 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
           !p.amenities.toSet().containsAll(_filters.amenities)) {
         return false;
       }
-      if (_filters.bedrooms != null) {
-        if (_filters.bedrooms == 5) {
-          if (p.beds < 5) return false;
-        } else if (p.beds != _filters.bedrooms) {
-          return false;
-        }
+      if (_filters.bedrooms != null && _filters.bedrooms != 5) {
+        if (p.beds != _filters.bedrooms) return false;
       }
-      if (_filters.maxPrice != null && p.priceValue > _filters.maxPrice!)
-        return false;
       return true;
     }).toList();
-    if (_sort == PropertySort.priceLow) {
-      list.sort((a, b) => a.priceValue.compareTo(b.priceValue));
-    } else if (_sort == PropertySort.priceHigh) {
-      list.sort((a, b) => b.priceValue.compareTo(a.priceValue));
-    }
-    return list;
   }
 
   Future<void> _openFilters() async {
     final result = await Navigator.of(context).push<PropertyFilters>(
       MaterialPageRoute(builder: (_) => FiltersScreen(initial: _filters)),
     );
-    if (result != null) setState(() => _filters = result);
+    if (result != null) {
+      setState(() => _filters = result);
+      _load();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final results = _results;
+    final results = _results(_all);
     final body = Column(
       children: [
         Container(
@@ -164,8 +223,10 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
                       ),
                     ),
                   ],
-                  onChanged: (v) =>
-                      setState(() => _sort = v ?? PropertySort.newest),
+                  onChanged: (v) {
+                    setState(() => _sort = v ?? PropertySort.newest);
+                    _load();
+                  },
                 ),
               ),
             ],
@@ -183,23 +244,34 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
                 if (_filters.isRent != null)
                   Chip(
                     label: Text(_filters.isRent! ? 'Rent' : 'Buy'),
-                    onDeleted: () => setState(() => _filters.isRent = null),
+                    onDeleted: () {
+                      setState(() => _filters.isRent = null);
+                      _load();
+                    },
                   ),
                 if (_filters.city != null)
                   Chip(
                     label: Text(_filters.city!),
-                    onDeleted: () => setState(() => _filters.city = null),
+                    onDeleted: () {
+                      setState(() => _filters.city = null);
+                      _load();
+                    },
                   ),
                 if (_filters.society != null)
                   Chip(
                     label: Text(_filters.society!),
-                    onDeleted: () => setState(() => _filters.society = null),
+                    onDeleted: () {
+                      setState(() => _filters.society = null);
+                      _load();
+                    },
                   ),
                 for (final type in _filters.types)
                   Chip(
                     label: Text(type),
-                    onDeleted: () =>
-                        setState(() => _filters.types.remove(type)),
+                    onDeleted: () {
+                      setState(() => _filters.types.remove(type));
+                      _load();
+                    },
                   ),
                 if (_filters.unit != null)
                   Chip(
@@ -207,15 +279,21 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
                       '${_filters.sizeValue?.toString() ?? ''} ${_filters.unit!}'
                           .trim(),
                     ),
-                    onDeleted: () => setState(() {
-                      _filters.unit = null;
-                      _filters.sizeValue = null;
-                    }),
+                    onDeleted: () {
+                      setState(() {
+                        _filters.unit = null;
+                        _filters.sizeValue = null;
+                      });
+                      _load();
+                    },
                   ),
                 if (_filters.amenities.isNotEmpty)
                   Chip(
                     label: Text('${_filters.amenities.length} amenities'),
-                    onDeleted: () => setState(() => _filters.amenities = {}),
+                    onDeleted: () {
+                      setState(() => _filters.amenities = {});
+                      _load();
+                    },
                   ),
               ],
             ),
@@ -248,7 +326,33 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
           ),
         ),
         Expanded(
-          child: results.isEmpty
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Could not load properties.\nCheck your internet connection.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _load,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : results.isEmpty
               ? const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
@@ -292,7 +396,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      for (final p in dummyProperties.where((e) => !e.isRent))
+                      for (final p in _buyAlso)
                         PropertyCard(
                           property: p,
                           onTap: () => Navigator.of(context).push(
@@ -304,8 +408,10 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: TextButton(
-                          onPressed: () =>
-                              setState(() => _filters.isRent = false),
+                          onPressed: () {
+                            setState(() => _filters.isRent = false);
+                            _load();
+                          },
                           child: const Text('View all for buy'),
                         ),
                       ),

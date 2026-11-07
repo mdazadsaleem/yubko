@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/dummy_data.dart';
+import '../../services/catalog_service.dart';
 import '../../theme/app_theme.dart';
 import '../chat/chats_screen.dart';
 import 'post_roommate_screen.dart';
@@ -9,7 +10,8 @@ enum RoommateSort { newest, budgetLow, budgetHigh, mostViewed }
 
 /// Roommates — the website's /roommates section: search, purpose,
 /// city, room type, gender, budget and non-smoker filters, sort,
-/// profile cards and Post Roommate Ad. Design only.
+/// profile cards and Post Roommate Ad. Listings load live
+/// from the API (GET /roommates).
 class RoommatesScreen extends StatefulWidget {
   const RoommatesScreen({super.key});
 
@@ -18,6 +20,38 @@ class RoommatesScreen extends StatefulWidget {
 }
 
 class _RoommatesScreenState extends State<RoommatesScreen> {
+  /// Live roommate listings from the API.
+  List<RoommateProfile> _fetched = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final roommates = await CatalogService.fetchRoommates();
+      if (!mounted) return;
+      setState(() {
+        _fetched = roommates;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
   final _searchController = TextEditingController();
   String _purpose = 'All';
   String? _city;
@@ -48,7 +82,7 @@ class _RoommatesScreenState extends State<RoommatesScreen> {
 
   List<RoommateProfile> get _list {
     final query = _searchController.text.trim().toLowerCase();
-    final list = dummyRoommates.where((profile) {
+    final list = _fetched.where((profile) {
       if (_purpose != 'All' && profile.purpose != _purpose) return false;
       if (_city != null && profile.city != _city) return false;
       if (_roomType != null && profile.roomType != _roomType) return false;
@@ -464,7 +498,27 @@ class _RoommatesScreenState extends State<RoommatesScreen> {
               ],
             ),
             const SizedBox(height: 10),
-            if (list.isEmpty)
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Could not load roommates.\nCheck your internet connection.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textMuted, height: 1.5),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(onPressed: _load, child: const Text('Retry')),
+                  ],
+                ),
+              )
+            else if (list.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 28),
                 child: Column(
