@@ -113,37 +113,40 @@ class _TopSearchesScreenState extends State<TopSearchesScreen> {
             for (final item in items)
               Container(
                 margin: const EdgeInsets.only(bottom: 9),
-                decoration: BoxDecoration(
+                child: Material(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.trending_up,
-                    color: AppColors.emeraldDark,
-                    size: 20,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(13),
+                    side: const BorderSide(color: AppColors.border),
                   ),
-                  title: Text(
-                    item.label,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                  clipBehavior: Clip.antiAlias,
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.trending_up,
+                      color: AppColors.emeraldDark,
+                      size: 20,
                     ),
-                  ),
-                  subtitle: Text(
-                    _subtitle(item),
-                    style: const TextStyle(
-                      fontSize: 11.5,
+                    title: Text(
+                      item.label,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _subtitle(item),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
                       color: AppColors.textMuted,
                     ),
+                    onTap: () => _open(item),
                   ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: AppColors.textMuted,
-                  ),
-                  onTap: () => _open(item),
                 ),
               ),
           ],

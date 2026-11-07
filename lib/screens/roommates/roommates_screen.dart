@@ -420,14 +420,25 @@ class _RoommatesScreenState extends State<RoommatesScreen> {
                         ),
                     ],
                   ),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    dense: true,
-                    title: const Text('Non-smoker only'),
-                    value: _nonSmokerOnly,
-                    onChanged: (value) =>
-                        setState(() => _nonSmokerOnly = value ?? false),
+                  // Plain Checkbox row (a CheckboxListTile inside
+                  // this decorated panel trips Flutter's ListTile
+                  // background assertion).
+                  InkWell(
+                    onTap: () =>
+                        setState(() => _nonSmokerOnly = !_nonSmokerOnly),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: _nonSmokerOnly,
+                          onChanged: (value) =>
+                              setState(() => _nonSmokerOnly = value ?? false),
+                        ),
+                        const Text(
+                          'Non-smoker only',
+                          style: TextStyle(fontSize: 13.5),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

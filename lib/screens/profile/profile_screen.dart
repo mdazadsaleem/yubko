@@ -94,26 +94,32 @@ class ProfileScreen extends StatelessWidget {
     String subtitle,
     VoidCallback onTap,
   ) {
+    // Material (not a decorated Container) so the ListTile's
+    // background and ink splash stay visible — Flutter asserts
+    // against ListTile inside a coloured DecoratedBox.
     return Container(
       margin: const EdgeInsets.only(bottom: 9),
-      decoration: BoxDecoration(
+      child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.primary),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(13),
+          side: const BorderSide(color: AppColors.border),
         ),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11.5)),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: AppColors.textMuted,
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          leading: Icon(icon, color: AppColors.primary),
+          title: Text(
+            title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 11.5)),
+          trailing: const Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: AppColors.textMuted,
+          ),
+          onTap: onTap,
         ),
-        onTap: onTap,
       ),
     );
   }
