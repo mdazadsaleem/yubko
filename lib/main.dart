@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import 'bindings/app_binding.dart';
 import 'screens/splash/splash_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -12,10 +14,11 @@ class YubkoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'GharMarkaz',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
+      initialBinding: AppBinding(),
       home: const SplashScreen(),
     );
   }
