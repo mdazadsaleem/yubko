@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import '../../config/site_assets.dart';
+import '../../controllers/catalog_controller.dart';
 import '../../data/dummy_data.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/property_card.dart';
@@ -97,6 +100,12 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
+  @override
+  void initState() {
+    super.initState();
+    CatalogController.to.loadHome();
+  }
+
   bool _buy = true;
   String? _city;
   String? _type;
@@ -365,27 +374,18 @@ class _HomeTabState extends State<HomeTab> {
               // Header
               Row(
                 children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      'G',
+                  // The website's Yubko logo (static site picture).
+                  Image.network(
+                    SiteAssets.logo,
+                    height: 30,
+                    errorBuilder: (_, _, _) => const Text(
+                      'yubko',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 19,
+                        fontSize: 22,
                         fontWeight: FontWeight.w900,
+                        color: AppColors.primary,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 9),
-                  const Text(
-                    'GharMark',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                   const Spacer(),
                   IconButton(
@@ -429,7 +429,7 @@ class _HomeTabState extends State<HomeTab> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Explore homes, plots and commercial property across Pakistan. Browse freely, contact sellers directly and post your property for free.',
+                'Explore homes, plots and commercial property across Pakistan. Browse freely, contact sellers directly, or post your property at no cost.',
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.textMuted,
@@ -437,25 +437,18 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.mint,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  '100% free, no featured ads — (PKR)',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
+              // The website's hero photo (static site picture).
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  SiteAssets.hero,
+                  height: 175,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -595,56 +588,63 @@ class _HomeTabState extends State<HomeTab> {
                 subtitle:
                     'Explore featured property categories across major cities with instant filtering',
               ),
-              Row(
-                children: [
-                  _CategoryCard(
-                    icon: Icons.house_rounded,
-                    title: 'Houses & Hostels',
-                    countLabel:
-                        '${dummyProperties.where((e) => e.type == 'House' || e.type == 'Room / Hostel').length} Ads',
-                    subtitle:
-                        'Independent houses, family villas, upper/lower partitions & student/exec hostels',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            const PropertiesScreen(initialType: 'House'),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  _CategoryCard(
-                    icon: Icons.apartment_rounded,
-                    title: 'Apartments & Flats',
-                    countLabel:
-                        '${dummyProperties.where((e) => e.type == 'Flat / Apartment').length} Ads',
-                    subtitle:
-                        'Luxury residential apartments, studio flats & penthouses across top locations',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const PropertiesScreen(
-                          initialType: 'Flat / Apartment',
+              Obx(() {
+                final catalog = CatalogController.to;
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _CategoryCard(
+                      icon: Icons.house_rounded,
+                      imageUrl: SiteAssets.categoryHouses,
+                      title: 'Houses & Hostels',
+                      countLabel:
+                          '${catalog.categoryCount(['House', 'Room / Hostel'])} Ads',
+                      subtitle:
+                          'Independent houses, family villas, upper/lower partitions & student/exec hostels',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              const PropertiesScreen(initialType: 'House'),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  _CategoryCard(
-                    icon: Icons.domain_rounded,
-                    title: 'Commercial & Plots',
-                    countLabel:
-                        '${dummyProperties.where((e) => e.type.contains('Plot') || e.type == 'Shop' || e.type == 'Office').length} Ads',
-                    subtitle:
-                        'Shops, office spaces, commercial plazas, residential & industrial plots',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const PropertiesScreen(
-                          initialType: 'Residential Plot',
+                    const SizedBox(width: 10),
+                    _CategoryCard(
+                      icon: Icons.apartment_rounded,
+                      imageUrl: SiteAssets.categoryApartments,
+                      title: 'Apartments & Flats',
+                      countLabel:
+                          '${catalog.categoryCount(['Flat / Apartment', 'Apartment', 'Penthouse'])} Ads',
+                      subtitle:
+                          'Luxury residential apartments, studio flats & penthouses across top locations',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const PropertiesScreen(
+                            initialType: 'Flat / Apartment',
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 10),
+                    _CategoryCard(
+                      icon: Icons.domain_rounded,
+                      imageUrl: SiteAssets.categoryCommercial,
+                      title: 'Commercial & Plots',
+                      countLabel:
+                          '${catalog.categoryCount(['Commercial Plot', 'Residential Plot', 'Office', 'Shop', 'Commercial', 'Industrial Plot', 'Agricultural Land', 'Plot File'])} Ads',
+                      subtitle:
+                          'Shops, office spaces, commercial plazas, residential & industrial plots',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const PropertiesScreen(
+                            initialType: 'Residential Plot',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
               const SizedBox(height: 10),
               // Roommates banner
               InkWell(
@@ -698,11 +698,45 @@ class _HomeTabState extends State<HomeTab> {
               _sectionTitle(
                 'RECENT LISTINGS',
                 'Newest properties',
+                subtitle:
+                    'Freshly added listings direct from owners and verified agents',
                 actionLabel: 'View all properties',
                 onAction: widget.onSearchTap,
               ),
-              for (final p in dummyProperties.take(4))
-                PropertyCard(property: p, onTap: () => _openProperty(p)),
+              Obx(() {
+                final catalog = CatalogController.to;
+                if (catalog.homeLoading.value && catalog.homeListings.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 26),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (catalog.homeError.value != null &&
+                    catalog.homeListings.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Could not load the newest properties.',
+                          style: TextStyle(color: AppColors.textMuted),
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              CatalogController.to.loadHome(force: true),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (final p in catalog.homeListings.take(4))
+                      PropertyCard(property: p, onTap: () => _openProperty(p)),
+                  ],
+                );
+              }),
               // Popular areas
               _sectionTitle(
                 'POPULAR AREAS · LIVE TRENDS',
@@ -710,71 +744,48 @@ class _HomeTabState extends State<HomeTab> {
                 subtitle:
                     'Discover homes and high-demand investment locations most searched across Pakistan',
               ),
-              for (final a in dummyAreas)
-                InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => PropertiesScreen(initialCity: a.city),
-                    ),
-                  ),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 9),
-                    padding: const EdgeInsets.all(13),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.location_on, color: AppColors.primary),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                a.city,
-                                style: const TextStyle(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              Text(
-                                a.areas,
-                                style: const TextStyle(
-                                  fontSize: 11.5,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ],
+              Obx(() {
+                final catalog = CatalogController.to;
+                final apiCities = catalog.popularCities;
+                return Column(
+                  children: [
+                    if (apiCities.isNotEmpty)
+                      for (final c in apiCities)
+                        _AreaRow(
+                          name: c.name,
+                          areas: c.areas,
+                          count: c.countLabel,
+                          imageUrl: c.imageUrl,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  PropertiesScreen(initialCity: c.name),
+                            ),
+                          ),
+                        )
+                    else
+                      for (final a in dummyAreas)
+                        _AreaRow(
+                          name: a.city,
+                          areas: a.areas,
+                          count: a.count,
+                          imageUrl: null,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  PropertiesScreen(initialCity: a.city),
+                            ),
                           ),
                         ),
-                        Text(
-                          a.count,
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.emeraldDark,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 13,
-                          color: AppColors.textMuted,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                  ],
+                );
+              }),
               // Post property steps (website)
               _sectionTitle(
                 'FOR PROPERTY OWNERS',
                 'Post a property for free in simple steps',
                 subtitle:
-                    'List your house, apartment, plot, or commercial space in minutes and connect with interested buyers and tenants across Pakistan.',
+                    'List your house, apartment, plot, or commercial space in minutes and connect with interested buyers directly without middleman fees.',
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -784,23 +795,26 @@ class _HomeTabState extends State<HomeTab> {
                 child: const Text('Post Property Free'),
               ),
               const SizedBox(height: 14),
-              const _StepTile(
+              _StepTile(
                 number: '01',
                 title: 'Add the essentials',
                 text:
                     'Choose Sale or Rent, select your property type, and enter key details like size, city, and asking price.',
+                imageUrl: SiteAssets.step1,
               ),
-              const _StepTile(
+              _StepTile(
                 number: '02',
                 title: 'Upload clear photos',
                 text:
-                    'Showcase your property with bright photos of bedrooms, living areas, and facade to attract genuine interest.',
+                    'Showcase your property with bright photos of bedrooms, living areas, and facade to attract genuine inquiries.',
+                imageUrl: SiteAssets.step2,
               ),
-              const _StepTile(
+              _StepTile(
                 number: '03',
                 title: 'Publish & connect directly',
                 text:
                     'Go live immediately with 100% free listing. Chat and receive inquiries directly from verified buyers and tenants.',
+                imageUrl: SiteAssets.step3,
               ),
               // Safety (website)
               _sectionTitle(
@@ -892,7 +906,7 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         SizedBox(width: 7),
                         Text(
-                          'support@gharmark.pk',
+                          'support@yubko.com',
                           style: TextStyle(color: Colors.white, fontSize: 12.5),
                         ),
                       ],
@@ -941,12 +955,14 @@ class _Stat extends StatelessWidget {
 class _CategoryCard extends StatelessWidget {
   const _CategoryCard({
     required this.icon,
+    required this.imageUrl,
     required this.title,
     required this.countLabel,
     required this.subtitle,
     required this.onTap,
   });
   final IconData icon;
+  final String imageUrl;
   final String title;
   final String countLabel;
   final String subtitle;
@@ -959,41 +975,59 @@ class _CategoryCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.all(11),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.border),
           ),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: AppColors.primary, size: 26),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
+              // The website's category photo.
+              Image.network(
+                imageUrl,
+                height: 56,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  height: 56,
+                  color: AppColors.mint,
+                  child: Icon(icon, color: AppColors.primary, size: 26),
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                countLabel,
-                style: const TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.emeraldDark,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 10.5,
-                  color: AppColors.textMuted,
-                  height: 1.25,
+              Padding(
+                padding: const EdgeInsets.all(11),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      countLabel,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.emeraldDark,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        color: AppColors.textMuted,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1009,10 +1043,12 @@ class _StepTile extends StatelessWidget {
     required this.number,
     required this.title,
     required this.text,
+    required this.imageUrl,
   });
   final String number;
   final String title;
   final String text;
+  final String imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -1021,6 +1057,26 @@ class _StepTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // The website's step photo.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.network(
+              imageUrl,
+              width: 58,
+              height: 58,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(
+                width: 58,
+                height: 58,
+                color: AppColors.mint,
+                child: const Icon(
+                  Icons.photo_camera_outlined,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
             decoration: BoxDecoration(
@@ -1115,6 +1171,101 @@ class _SafetyTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Popular-area row: city photo, name, areas and live count.
+class _AreaRow extends StatelessWidget {
+  const _AreaRow({
+    required this.name,
+    required this.areas,
+    required this.count,
+    required this.imageUrl,
+    required this.onTap,
+  });
+
+  final String name;
+  final String areas;
+  final String count;
+  final String? imageUrl;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 9),
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            if (imageUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: Image.network(
+                  imageUrl!,
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Container(
+                    width: 50,
+                    height: 50,
+                    color: AppColors.mint,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              )
+            else
+              const Icon(Icons.location_on, color: AppColors.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    areas,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              count,
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.emeraldDark,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 13,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
       ),
     );
   }

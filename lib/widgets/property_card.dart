@@ -6,8 +6,8 @@ import 'package:get/get.dart';
 import '../controllers/saved_controller.dart';
 import '../theme/app_theme.dart';
 
-/// Photo placeholder for a listing (design only — real photos come
-/// from the API in Phase 2). Website mint tones + property icon.
+/// Photo for a listing: the real API photo when the listing has
+/// one, otherwise the website-mint placeholder with the type icon.
 class PropertyPhoto extends StatelessWidget {
   const PropertyPhoto({super.key, required this.property, this.height = 150});
 
@@ -27,14 +27,28 @@ class PropertyPhoto extends StatelessWidget {
         ),
       ),
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          Center(
-            child: Icon(
-              property.icon,
-              size: height * 0.45,
-              color: AppColors.primary.withValues(alpha: 0.35),
+          if (property.imageUrls.isNotEmpty)
+            Image.network(
+              property.imageUrls.first,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Center(
+                child: Icon(
+                  property.icon,
+                  size: height * 0.45,
+                  color: AppColors.primary.withValues(alpha: 0.35),
+                ),
+              ),
+            )
+          else
+            Center(
+              child: Icon(
+                property.icon,
+                size: height * 0.45,
+                color: AppColors.primary.withValues(alpha: 0.35),
+              ),
             ),
-          ),
           Positioned(
             top: 10,
             left: 10,

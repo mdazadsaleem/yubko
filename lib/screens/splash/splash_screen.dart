@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../services/auth_service.dart';
+import '../../config/site_assets.dart';
+import '../../controllers/saved_controller.dart';
 import '../../controllers/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -34,6 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
         final user = await AuthService.me().timeout(const Duration(seconds: 6));
         await SessionController.to.updateUser(user);
         loggedIn = true;
+        SavedController.to.syncFromServer();
       }
     } catch (_) {
       await SessionController.to.clear();
@@ -55,30 +58,18 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                'G',
+            // The website's Yubko logo, white version for the
+            // green splash background.
+            Image.network(
+              SiteAssets.logoWhite,
+              height: 64,
+              errorBuilder: (_, _, _) => const Text(
+                'yubko',
                 style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 46,
+                  color: Colors.white,
+                  fontSize: 40,
                   fontWeight: FontWeight.w900,
                 ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            const Text(
-              'GharMarkaz',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 6),

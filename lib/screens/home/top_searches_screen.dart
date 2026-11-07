@@ -1,59 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import '../../controllers/catalog_controller.dart';
+import '../../data/api_listing.dart';
 import '../../theme/app_theme.dart';
 import '../properties/properties_screen.dart';
 
-class _TopSearch {
-  const _TopSearch({
-    required this.title,
-    required this.subtitle,
-    this.isRent,
-    this.city,
-    this.type,
-    this.society,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool? isRent;
-  final String? city;
-  final String? type;
-  final String? society;
-}
-
-const _searches = [
-  _TopSearch(
-    title: 'Houses For Sale in Karachi',
-    subtitle: 'Houses · Buy · Karachi',
-    isRent: false,
-    city: 'Karachi',
-    type: 'House',
+/// Fallback Top Searches — the website's current list, shown
+/// until GET /settings/public answers (it carries the live list).
+const _fallbackHrefs = <(String, String)>[
+  (
+    'Portions & Floors for Rent',
+    '/properties?intent=rent&type=Upper Portion,Lower Portion',
   ),
-  _TopSearch(
-    title: 'Houses in Satellite Town',
-    subtitle: 'Houses · Satellite Town',
-    type: 'House',
-    society: 'Satellite Town',
+  (
+    'Flat / Apartment for Rent',
+    '/properties?intent=rent&type=Flat / Apartment',
   ),
-  _TopSearch(
-    title: 'Houses In Lahore',
-    subtitle: 'Houses · Lahore',
-    city: 'Lahore',
-    type: 'House',
+  (
+    'Houses for Sale in Lahore',
+    '/properties?intent=buy&city=Lahore&type=House',
   ),
-  _TopSearch(
-    title: 'Flats For Rent In Lahore',
-    subtitle: 'Flats · Rent · Lahore',
-    isRent: true,
-    city: 'Lahore',
-    type: 'Flat / Apartment',
+  (
+    'Houses for Sale in Islamabad',
+    '/properties?intent=buy&city=Islamabad&type=House',
   ),
 ];
 
-/// Top Searches — the website navigation's popular-search entry.
-/// Each shortcut opens Properties with the matching filters applied.
-class TopSearchesScreen extends StatelessWidget {
+/// Top Searches — the website header's Top Searches menu. The
+/// list itself is dynamic: it comes from the site's public
+/// settings API, exactly like the website renders it. Each item
+/// opens Properties with the matching filters applied.
+class TopSearchesScreen extends StatefulWidget {
   const TopSearchesScreen({super.key});
+
+  @override
+  State<TopSearchesScreen> createState() => _TopSearchesScreenState();
+}
+
+class _TopSearchesScreenState extends State<TopSearchesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    CatalogController.to.loadSettings();
+  }
+
+  void _open(TopSearchItem item) {
+    final params = Uri.parse(item.href).queryParameters;
+    final types = (params['type'] ?? '')
+        .split(',')
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toSet();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PropertiesScreen(
+          initialIsRent: params['intent'] == null
+              ? null
+              : params['intent'] == 'rent',
+          initialCity: params['city'],
+          initialTypes: types.isEmpty ? null : types,
+          initialSociety: params['society'],
+        ),
+      ),
+    );
+  }
+
+  String _subtitle(TopSearchItem item) {
+    final params = Uri.parse(item.href).queryParameters;
+    final parts = <String>[
+      if (params['type'] != null) params['type']!.replaceAll(',', ' · '),
+      if (params['intent'] == 'rent') 'Rent',
+      if (params['intent'] == 'buy') 'Buy',
+      if (params['city'] != null) params['city']!,
+      if (params['society'] != null) params['society']!,
+    ];
+    return parts.join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,62 +94,61 @@ class TopSearchesScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-        children: [
-          const Text(
-            'Popular right now',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            "The website's most-opened searches.",
-            style: TextStyle(fontSize: 13, color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 14),
-          for (final search in _searches)
-            Container(
-              margin: const EdgeInsets.only(bottom: 9),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: ListTile(
-                leading: const Icon(
-                  Icons.trending_up,
-                  color: AppColors.emeraldDark,
+      body: Obx(() {
+        final settings = CatalogController.to.settings.value;
+        final items = settings?.topSearches.isNotEmpty == true
+            ? settings!.topSearches
+            : [
+                for (final (label, href) in _fallbackHrefs)
+                  TopSearchItem(label: label, href: href),
+              ];
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+          children: [
+            const Text(
+              'Most searched right now',
+              style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 10),
+            for (final item in items)
+              Container(
+                margin: const EdgeInsets.only(bottom: 9),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: AppColors.border),
                 ),
-                title: Text(
-                  search.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.trending_up,
+                    color: AppColors.emeraldDark,
+                    size: 20,
                   ),
-                ),
-                subtitle: Text(
-                  search.subtitle,
-                  style: const TextStyle(fontSize: 11.5),
-                ),
-                trailing: const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color: AppColors.textMuted,
-                ),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => PropertiesScreen(
-                      initialIsRent: search.isRent,
-                      initialCity: search.city,
-                      initialType: search.type,
-                      initialSociety: search.society,
+                  title: Text(
+                    item.label,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  subtitle: Text(
+                    _subtitle(item),
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: AppColors.textMuted,
+                  ),
+                  onTap: () => _open(item),
                 ),
               ),
-            ),
-        ],
-      ),
+          ],
+        );
+      }),
     );
   }
 }
