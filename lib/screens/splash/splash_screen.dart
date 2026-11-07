@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../services/auth_service.dart';
-import '../../services/session_store.dart';
+import '../../controllers/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../home/home_screen.dart';
@@ -30,13 +30,13 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _start() async {
     var loggedIn = false;
     try {
-      if (await SessionStore.restore()) {
+      if (await SessionController.to.restore()) {
         final user = await AuthService.me().timeout(const Duration(seconds: 6));
-        await SessionStore.updateUser(user);
+        await SessionController.to.updateUser(user);
         loggedIn = true;
       }
     } catch (_) {
-      await SessionStore.clear();
+      await SessionController.to.clear();
     }
     await Future<void>.delayed(const Duration(milliseconds: 1400));
     if (!mounted) return;

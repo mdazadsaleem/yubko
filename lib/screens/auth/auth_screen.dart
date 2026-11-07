@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../services/auth_service.dart';
-import '../../services/session_store.dart';
+import '../../controllers/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_top_bar.dart';
 import '../../widgets/social_icons.dart';
@@ -138,7 +138,10 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() => _busy = true);
     try {
       final session = await AuthService.login(email: email, password: password);
-      await SessionStore.save(token: session.token, user: session.user);
+      await SessionController.to.save(
+        token: session.token,
+        newUser: session.user,
+      );
       if (!mounted) return;
       _goHome(session.message ?? 'Logged in successfully.');
     } on ApiException catch (e) {
@@ -212,7 +215,10 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
       final session = await AuthService.loginWithGoogle(idToken);
-      await SessionStore.save(token: session.token, user: session.user);
+      await SessionController.to.save(
+        token: session.token,
+        newUser: session.user,
+      );
       if (!mounted) return;
       _goHome(session.message ?? 'Google authentication successful.');
     } on ApiException catch (e) {

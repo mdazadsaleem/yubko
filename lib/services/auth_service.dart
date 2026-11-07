@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
 import '../data/api_user.dart';
-import 'session_store.dart';
+import '../controllers/session_controller.dart';
 
 /// An error returned by the API (or a network failure).
 /// [message] is the server's own message, safe to show to the user.
@@ -45,11 +45,20 @@ class AuthService {
 
   static Uri _uri(String path) => Uri.parse('${ApiConfig.authBaseUrl}$path');
 
+  /// The session controller, when it is registered.
+  static SessionController? get _session {
+    try {
+      return SessionController.to;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Map<String, String> _headers({bool auth = false}) => {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    if (auth && SessionStore.token != null)
-      'Authorization': 'Bearer ${SessionStore.token}',
+    if (auth && _session?.token != null)
+      'Authorization': 'Bearer ${_session!.token}',
   };
 
   static Map<String, dynamic> _decode(http.Response response) {
@@ -60,9 +69,9 @@ class AuthService {
     } catch (_) {
       // Non-JSON response (e.g. a proxy error page).
     }
-    if (response.statusCode == 401 && SessionStore.isLoggedIn) {
+    if (response.statusCode == 401 && (_session?.isLoggedIn ?? false)) {
       // Token expired/invalid — the docs say: log the user out.
-      SessionStore.clear();
+      _session?.clear();
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
@@ -272,8 +281,8 @@ class AuthService {
   static Future<ApiUser> uploadAvatar(File file) async {
     try {
       final request = http.MultipartRequest('POST', _uri('/profile/avatar'));
-      if (SessionStore.token != null) {
-        request.headers['Authorization'] = 'Bearer ${SessionStore.token}';
+      if (_session?.token != null) {
+        request.headers['Authorization'] = 'Bearer ${_session!.token}';
       }
       request.files.add(await http.MultipartFile.fromPath('avatar', file.path));
       final streamed = await request.send().timeout(ApiConfig.timeout);
@@ -282,7 +291,7 @@ class AuthService {
       if (body['user'] is Map<String, dynamic>) {
         return ApiUser.fromJson(body['user'] as Map<String, dynamic>);
       }
-      final current = SessionStore.currentUser.value;
+      final current = _session?.user.value;
       return current!.copyWith(avatarUrl: body['avatarUrl']?.toString());
     } on ApiException {
       rethrow;

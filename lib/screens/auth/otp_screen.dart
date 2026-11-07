@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../services/auth_service.dart';
-import '../../services/session_store.dart';
+import '../../controllers/session_controller.dart';
 import '../../theme/app_theme.dart';
 import '../home/home_screen.dart';
 import 'reset_password_screen.dart';
@@ -102,7 +102,10 @@ class _OtpScreenState extends State<OtpScreen> {
           email: widget.email,
           otpCode: code,
         );
-        await SessionStore.save(token: session.token, user: session.user);
+        await SessionController.to.save(
+          token: session.token,
+          newUser: session.user,
+        );
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
